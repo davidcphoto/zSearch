@@ -1,18 +1,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
-const fs = require('fs');
-const zowe = require('zowe-explorer-api');
+const zowe_explorer_api = require('@zowe/zowe-explorer-api');
+const ProfileInfo = require("@zowe/imperative");
+const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
 
-inport * from '@zows/zowe-explorer-api';
 
-export let inportedAPI;
-export let getJesApiImplementation;
-//const { visitNode } = require('typescript');
-// const zowe = require('@zowe/zowe-explorer-api');
 
-// Import the node type from Zowe Explorer API
-// const zowe = require('@zowe/zowe-explorer-api');
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -23,55 +17,59 @@ function activate(context) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "mainframesearch" is now active!');
-
-
-
-	let disposable2 = vscode.commands.registerCommand('mainframesearch.teste', function () {
-
-
-		const valor = vscode.extensions.getExtension("zowe.zowe-explorer").exports;
-
-		console.log(valor);
-	})
+	console.log('Congratulations, your extension "zSearch" is now active!');
 
 
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('mainframesearch.Search', function (node: iZoweDatasetTreeNode) {
+	let disposable = vscode.commands.registerCommand('zSearch.Search', function (node = zowe_explorer_api.ZoweTreeNode) {
 		// The code you place here will be executed every time your command is executed
 		// const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
 		// Display a message box to the user
 
-		const tree = vscode.TreeItem;
-		console.log(tree)
+		let Biblioteca;
 
-		const editor = vscode.window.activeTextEditor;
-		let seleccao = '';
+		if (node) {
+			Biblioteca = node.label;
+			const editor = vscode.window.activeTextEditor;
+			let seleccao;
 
-		if (editor != null) {
+			if (editor != null) {
 
-			const selectedText = editor.document.getText(editor.selection);
+				const selectedText = editor.document.getText(editor.selection);
 
-			if (selectedText != '') {
+				if (selectedText != '') {
 
-				seleccao = selectedText.toUpperCase();
+					seleccao = selectedText.toUpperCase();
 
+					formataZowe(seleccao, Biblioteca);
+
+				} else {
+
+
+
+					vscode.window.showInputBox({
+						placeHolder: "Search string",
+						value: "",
+						title: "zSearch - Insert the search string "
+					}).then((value) => {
+
+						formataZowe(value, Biblioteca);
+
+					});
+
+
+				}
 
 			}
+
+
+		} else {
+			vscode.window.showErrorMessage("No Search library selected");
+
 		}
-
-		const Biblioteca = vscode.workspace.getConfiguration().get('util.LastSearch');
-		const items = [
-			{ label: 'Pesquisar', description: 'Procurar o valor na biblioteca' },
-			{ label: 'Valor', description: seleccao },
-			{ label: 'Biblioteca', description: Biblioteca }
-		];
-
-		Obter(items);
-
 
 	});
 
@@ -80,7 +78,6 @@ function activate(context) {
 	myStatusBarItem.text = 'Searching...';
 	context.subscriptions.push(myStatusBarItem);
 	context.subscriptions.push(disposable);
-	context.subscriptions.push(disposable2);
 }
 
 // This method is called when your extension is deactivated
@@ -90,11 +87,10 @@ module.exports = {
 	activate,
 	deactivate
 }
-
 //////////////////////////////////////////////////////////////////
 function escreveJob(Biblioteca = new String, ValorPesquisar = new String, filtro = []) {
 
-	const JobCard = vscode.workspace.getConfiguration().get('mainframesearch.JobCard');
+	const JobCard = vscode.workspace.getConfiguration().get('zSearch.JobCard');
 
 	let filtroPesquisa = ObtemFiltroPesquisar(filtro);
 
@@ -117,33 +113,27 @@ SRCHFOR  '` + ValorPesquisar + `'
 }
 
 //////////////////////////////////////////////////////////////////
-function escreveFicheiro(job = new Job) {
-
-	fs.writeFile(job.Path, job.JCL, (err) => {
-
-		// In case of a error throw err.
-		if (err) {
-			console.error(err);
-			throw err
-		};
-	})
-}
-//////////////////////////////////////////////////////////////////
-function ObterBiblioteca() {
-
-// Declare the node type when defining the node as a parameter for the function
+function formataZowe(ValorPesquisar, Biblioteca) {
 
 
+	(async () => {
 
-	// console.log('node ' + node);
-	// const Biblioteca = vscode.window.showInformationMessage(EventEmitter);
+		// Load connection info from default z/OSMF profile
+		const profInfo = new ProfileInfo.ProfileInfo("zowe");
+		await profInfo.readProfilesFromDisk();
+		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
+		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
+		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
-	return "X93182.LIB.SOURCE"
+		 executaJobZowe(session, job);
 
-}
 
-//////////////////////////////////////////////////////////////////
-function ObterValorPesquisar() {
+	})().catch((err) => {
+		console.error('ObtemRespostaJobZowe - erro: ' + err);
+		process.exit(1);
+	});
+	const job = new Job(ValorPesquisar, Biblioteca);
+
 
 
 }
@@ -173,50 +163,55 @@ function ObtemFiltroPesquisar(filtro = []) {
 
 }
 
+//////////////////////////////////////////////////////////////////
+
+function executaJobZowe(session, job = new Job) {
+
+	(async () => {
+
+
+		SubmitJobs
+			.SubmitJobs
+			.submitJclNotify(session, job.JCL)
+			.then(resultado => {
+
+				 ObtemRespostaJobZowe(session, resultado, job);
+
+			});
+
+	})().catch((err) => {
+		console.error('executaJobZowe - erro: ' + err);
+		process.exit(1);
+	});
+}
 
 //////////////////////////////////////////////////////////////////
 
-function executarJob(ValorPesquisar, Job) {
+function ObtemRespostaJobZowe(session, job, dadosjob = new Job) {
 
-	const { exec } = require("child_process");
-	const Comando = 'zowe zos-jobs submit local-file "' + Job.Path + '" --view-all-spool-content --reject-unauthorized false --wfo --response-format-json';
+	(async () => {
 
-	exec(Comando, (error, stdout, stderr) => {
-		if (error) {
-			console.log(`error: ${error.message}`);
-			return;
-		}
-		if (stderr) {
-			console.log(`stderr: ${stderr}`);
-			return;
-		}
+		console.log(job);
 
+		SubmitJobs
+			.GetJobs
+			.getSpoolContentById(session, job.jobname, job.jobid, 102).then(resposta => {
+				console.log("resposta getSpoolContent: " + resposta);
 
-		const dados = stdout.replace(/(\r\n|\n|\r)/gm, "");
+				const Resultados = new ResultadoPesquisa(dadosjob.ValorPesquisar, resposta);
+				console.log(Resultados);
 
-		const myObj = JSON.parse(dados);
+				geraWebView(Resultados);
 
-		if (myObj.success) {
+			}).catch ((err) => {
+				console.error('getSpoolContent - erro: ' + err);
+			process.exit(1);
+		});
 
-			for (let i = 0; i < myObj.data.length; i++) {
-				if (myObj.data[i].ddName == 'OUTDD') {
-
-					const Dados = myObj.data[i].data;
-					console.log(`Dados: ${Dados}`);
-					const Resultados = new ResultadoPesquisa(ValorPesquisar, Dados);
-					console.log(Resultados);
-
-					geraWebView(Resultados);
-				}
-
-			}
-
-		} else {
-
-			vscode.window.showErrorMessage("Search Job tor executed");
-		}
-	}
-	)
+	})().catch((err) => {
+		console.error('ObtemRespostaJobZowe - erro: ' + err);
+		process.exit(1);
+	});
 }
 
 //////////////////////////////////////////////////////////////////
@@ -224,11 +219,14 @@ function executarJob(ValorPesquisar, Job) {
 class Job {
 	constructor(ValorPesquisar, Biblioteca) {
 
-		this.JCL = escreveJob(Biblioteca, ValorPesquisar);
-		this.Path = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\" + ValorPesquisar + ".jcl";
+		this.ValorPesquisar = ValorPesquisar;
+		this.Biblioteca = Biblioteca;
+		this.JCL = escreveJob(this.Biblioteca, this.ValorPesquisar);
 
 	}
 }
+
+//////////////////////////////////////////////////////////////////
 
 class LinhaEncontrada {
 	constructor(Linha) {
@@ -238,6 +236,8 @@ class LinhaEncontrada {
 
 	}
 }
+
+//////////////////////////////////////////////////////////////////
 
 class ItemEncontrado {
 	constructor(ItemName, Item = []) {
@@ -260,6 +260,7 @@ class ItemEncontrado {
 	}
 }
 
+//////////////////////////////////////////////////////////////////
 
 class ResultadoPesquisa {
 
@@ -309,69 +310,7 @@ class ResultadoPesquisa {
 
 	}
 }
-//////////////////////////////////////////////////////////////////
 
-
-function Obter(items = []) {
-
-	vscode.window.showQuickPick(items, {
-		matchOnDescription: true,
-		placeHolder: 'Search:',
-	}).then((selected) => {
-
-		switch (selected.label) {
-			case "Valor":
-			case "Biblioteca":
-
-				const Valor = vscode.window.showInputBox({
-					placeHolder: selected.label,
-					value: selected.description,
-					title: selected.label
-				}).then((value) => {
-
-					let i = items.indexOf(selected)
-					items[i].description = value.toUpperCase();
-					Obter(items);
-
-				});
-				console.log('Valor:', Valor);
-
-
-
-				break;
-			case "Pesquisar":
-
-				let valor = items[1].description;
-				let biblioteca = items[2].description;
-
-				vscode.workspace.getConfiguration().update('util.LastSearch', biblioteca)
-
-				if (valor === '' && biblioteca === '') {
-					vscode.window.showInformationMessage("Valor a pesquisar ou Biblioteca não preenchidos.");
-				}
-				else {
-
-
-					myStatusBarItem.text = 'Job de 3.14 a executar...';
-					myStatusBarItem.show();
-					const job = new Job(valor, biblioteca);
-					console.log(job.JCL);
-
-					vscode.window.showInformationMessage('Sarching Mainframe for ' + valor);
-
-					myStatusBarItem.text = 'Sarching Mainframe for ' + valor;
-					myStatusBarItem.show();
-					escreveFicheiro(job);
-
-					executarJob(valor, job);
-
-					myStatusBarItem.hide();
-					}
-
-
-		}
-	})
-		}
 //////////////////////////////////////////////////////////////////
 function geraWebView(resultado = new ResultadoPesquisa) {
 

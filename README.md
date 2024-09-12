@@ -24,7 +24,7 @@ Search a mainframe library thro job running program ISRSUPC.
 
 This extension contributes the following settings:
 
-* `mainframesearch.JobCard`: Job card definition for the search job.
+* `zSearch.JobCard`: Job card definition for the search job.
 
 ## Known Issues
 

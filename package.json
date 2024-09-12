@@ -1,6 +1,7 @@
 {
-  "name": "mainframesearch",
-  "displayName": "MainframeSearch",
+  "name": "zSearch",
+  "publisher": "David Canto",
+  "displayName": "zSearch",
   "description": "A search job extension to run on a mainframe",
   "version": "0.0.1",
   "engines": {
@@ -14,31 +15,23 @@
   "contributes": {
     "commands": [
       {
-        "command": "mainframesearch.Search",
-        "title": "Search Mainframe (3.14)"
-      },
-      {
-        "command": "mainframesearch.teste",
-        "title": "testa mainframe"
+        "command": "zSearch.Search",
+        "title": "zSearch on library"
       }
     ],
     "menus": {
       "view/item/context": [
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr)/",
-          "command": "mainframesearch.Search",
-          "group": "100_mainframesearch"
-        },
-        {
-          "command": "mainframesearch.testa",
-          "group": "100_mainframesearch"
+          "command": "zSearch.Search",
+          "group": "100_zSearch01"
         }
       ]
     },
     "configuration": {
       "title": "Mainframe Search",
       "properties": {
-        "mainframesearch.JobCard": {
+        "zSearch.JobCard": {
           "type": "array",
           "description": "Job Card to be used on job search",
           "default": "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
@@ -55,20 +48,24 @@
     "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "devDependencies": {
-    "@types/vscode": "^1.92.0",
     "@types/mocha": "^10.0.2",
     "@types/node": "18.x",
+    "@types/vscode": "^1.92.0",
+    "@vscode/test-electron": "^2.3.4",
+    "@zowe/cli-test-utils": "7.29.0",
+    "@zowe/core-for-zowe-sdk": "7.29.0",
     "eslint": "^8.50.0",
     "glob": "^10.3.3",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
-    "@vscode/test-electron": "^2.3.4",
-    "@zowe/zowe-explorer-api": "1.16.1"
+    "typescript": "^5.2.2"
   },
-  "extensionDependencies": [
-    "Zowe.vscode-extension-for-zowe"
-  ],
+  "peerDependencies": {
+    "@zowe/core-for-zowe-sdk": "^7.0.0"
+  },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "1.16.1"
+    "@zowe/imperative": "^5.27.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^7.29.0",
+    "@zowe/zosmf-for-zowe-sdk": "^7.29.0",
+    "@zowe/zowe-explorer-api": "^2.18.0"
   }
 }
