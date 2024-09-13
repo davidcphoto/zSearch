@@ -4,13 +4,15 @@ const vscode = require('vscode');
 const zowe_explorer_api = require('@zowe/zowe-explorer-api');
 const ProfileInfo = require("@zowe/imperative");
 const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
+const Download = require("@zowe/zos-files-for-zowe-sdk");
+const { profile } = require('console');
 
 
 
 /**
  * @param {vscode.ExtensionContext} context
  */
-let myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 1000);
+let StatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 1000);
 
 
 function activate(context) {
@@ -20,6 +22,13 @@ function activate(context) {
 	console.log('Congratulations, your extension "zSearch" is now active!');
 
 
+	let teste = vscode.commands.registerCommand('zSearch.Testa', function () {
+
+		abreElemento("EXCIDAVE", 200, "X93182.LIB.SOURCE");
+
+
+
+	})
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -29,10 +38,12 @@ function activate(context) {
 		// const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
 		// Display a message box to the user
 
-		let Biblioteca;
+		const Biblioteca = node.label;
+		const BibliotecaChildren = node.children;
 
-		if (node) {
-			Biblioteca = node.label;
+		console.log(BibliotecaChildren);
+
+		if (Biblioteca) {
 			const editor = vscode.window.activeTextEditor;
 			let seleccao;
 
@@ -44,25 +55,17 @@ function activate(context) {
 
 					seleccao = selectedText.toUpperCase();
 
-					formataZowe(seleccao, Biblioteca);
+					trataFiltros(seleccao, Biblioteca, BibliotecaChildren);
 
 				} else {
 
-
-
-					vscode.window.showInputBox({
-						placeHolder: "Search string",
-						value: "",
-						title: "zSearch - Insert the search string "
-					}).then((value) => {
-
-						formataZowe(value, Biblioteca);
-
-					});
-
+					introduzirString(Biblioteca, BibliotecaChildren);
 
 				}
 
+			} else {
+
+				introduzirString(Biblioteca, BibliotecaChildren);
 			}
 
 
@@ -74,10 +77,28 @@ function activate(context) {
 	});
 
 
-	myStatusBarItem.command = "Mainframe Seach";
-	myStatusBarItem.text = 'Searching...';
-	context.subscriptions.push(myStatusBarItem);
+	StatusBar.command = "zSearch";
+	StatusBar.tooltip = "Searching the mainframe";
+	context.subscriptions.push(StatusBar);
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(teste);
+}
+
+function introduzirString(Biblioteca = '', BibliotecaChildren) {
+
+	if (BibliotecaChildren.length > 0) {
+
+		vscode.window.showInputBox({
+			placeHolder: "Search string",
+			value: "",
+			title: "zSearch - Insert the search string ",
+			"ignoreFocusOut": true
+		}).then((value) => {
+
+			trataFiltros(value, Biblioteca, BibliotecaChildren);
+		});
+
+	}
 }
 
 // This method is called when your extension is deactivated
@@ -88,13 +109,28 @@ module.exports = {
 	deactivate
 }
 //////////////////////////////////////////////////////////////////
-function escreveJob(Biblioteca = new String, ValorPesquisar = new String, filtro = []) {
+function escreveJob(session, Biblioteca = new String, ValorPesquisar = new String, filtros = []) {
 
-	const JobCard = vscode.workspace.getConfiguration().get('zSearch.JobCard');
+	// "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
 
-	let filtroPesquisa = ObtemFiltroPesquisar(filtro);
+		let ValorMostra;
 
-	const job = JobCard + `
+	const userid = session.ISession.user;
+
+		const user = vscode.workspace.getConfiguration().get('zSearch.JobName');;
+		const userfinal = user.split('${USER}').join(userid);
+		const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
+		const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
+		if (ValorPesquisar.length > 15) {
+
+			ValorMostra = ValorPesquisar.substring(0, 12) + '...';
+		} else {
+			ValorMostra = ValorPesquisar;
+		}
+	const JobCard = '//' + userfinal + " JOB ,'Search for " + ValorMostra + "',MSGCLASS=" + MSGCLASS + ",CLASS=" + CLASS + ",REGION=6M";
+		let filtroPesquisa = ObtemFiltroPesquisar(filtros);
+
+		const job = JobCard + `
 //SEARCH  EXEC PGM=ISRSUPC,
 //            PARM=(SRCHCMP,
 //            'ANYC')
@@ -104,39 +140,75 @@ function escreveJob(Biblioteca = new String, ValorPesquisar = new String, filtro
 //SYSIN  DD *
 SRCHFOR  '` + ValorPesquisar + `'
 ` + filtroPesquisa +
-		`/*`;
+			`/*`;
 
 
 
-	return job;
+	return job.toUpperCase();
+	// })
+
+}
+
+function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren) {
+
+	vscode.window.showInputBox({
+		placeHolder: "Search filter",
+		title: "zSearch - Filter search elements",
+		prompt: "Filter search elementos. Example: AA*, BB*",
+		"ignoreFocusOut": true
+	}).then(value => {
+
+		StatusBar.text = 'Searching for ' + ValorPesquisar;
+		StatusBar.show();
+
+		const valueUpperCase = value.toUpperCase();
+		const valueTrim = valueUpperCase.split(' ').join('');
+
+		const filtro = valueTrim.split(',');
+		let filtroSelecionado = [];
+		BibliotecaChildren.forEach(registo => {
+
+			filtro.forEach(filtro => {
+				if (filtro.endsWith('*')) {
+					if (registo.label.startsWith(filtro.substring(0,filtro.length-1))) {
+						filtroSelecionado.push(registo.label);
+					}
+				} else {
+					if (filtro.startsWith('*')) {
+						if (registo.label.endsWith(filtro.substring(1))) {
+							filtroSelecionado.push(registo.label);
+						}
+					}
+				}
+			})
+		});
+
+		trataSessao(ValorPesquisar, Biblioteca, filtroSelecionado)
+	});
 
 }
 
 //////////////////////////////////////////////////////////////////
-function formataZowe(ValorPesquisar, Biblioteca) {
-
+function trataSessao(ValorPesquisar, Biblioteca, value) {
 
 	(async () => {
-
-		// Load connection info from default z/OSMF profile
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
 		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
 		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
 		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
-		 executaJobZowe(session, job);
+		const job = new Job(session, ValorPesquisar, Biblioteca, value);
 
+		executaJobZowe(job);
 
 	})().catch((err) => {
 		console.error('ObtemRespostaJobZowe - erro: ' + err);
 		process.exit(1);
 	});
-	const job = new Job(ValorPesquisar, Biblioteca);
-
-
 
 }
+
 
 //////////////////////////////////////////////////////////////////
 function ObtemFiltroPesquisar(filtro = []) {
@@ -148,7 +220,10 @@ function ObtemFiltroPesquisar(filtro = []) {
 
 		for (let i = 0; i < filtro.length; i++) {
 
-			if (i % ElementosPorLinha) {
+			if (i / ElementosPorLinha == Math.floor(i / ElementosPorLinha)) {
+				if (i > 0) {
+					filtroPesquisa += '\n'
+				}
 				filtroPesquisa += "SELECT " + filtro[i];
 			} else {
 				filtroPesquisa += "," + filtro[i];
@@ -157,6 +232,7 @@ function ObtemFiltroPesquisar(filtro = []) {
 
 
 		}
+		filtroPesquisa += '\n';
 	}
 
 	return filtroPesquisa;
@@ -165,17 +241,15 @@ function ObtemFiltroPesquisar(filtro = []) {
 
 //////////////////////////////////////////////////////////////////
 
-function executaJobZowe(session, job = new Job) {
+function executaJobZowe(job = new Job) {
 
 	(async () => {
-
-
 		SubmitJobs
 			.SubmitJobs
-			.submitJclNotify(session, job.JCL)
+			.submitJclNotify(job.Session, job.JCL)
 			.then(resultado => {
 
-				 ObtemRespostaJobZowe(session, resultado, job);
+				 ObtemRespostaJobZowe(resultado, job);
 
 			});
 
@@ -187,7 +261,7 @@ function executaJobZowe(session, job = new Job) {
 
 //////////////////////////////////////////////////////////////////
 
-function ObtemRespostaJobZowe(session, job, dadosjob = new Job) {
+function ObtemRespostaJobZowe(jobExecutado, job = new Job) {
 
 	(async () => {
 
@@ -195,10 +269,10 @@ function ObtemRespostaJobZowe(session, job, dadosjob = new Job) {
 
 		SubmitJobs
 			.GetJobs
-			.getSpoolContentById(session, job.jobname, job.jobid, 102).then(resposta => {
+			.getSpoolContentById(job.Session, jobExecutado.jobname, jobExecutado.jobid, 102).then(resposta => {
 				console.log("resposta getSpoolContent: " + resposta);
 
-				const Resultados = new ResultadoPesquisa(dadosjob.ValorPesquisar, resposta);
+				const Resultados = new ResultadoPesquisa(job.ValorPesquisar, resposta);
 				console.log(Resultados);
 
 				geraWebView(Resultados);
@@ -217,11 +291,13 @@ function ObtemRespostaJobZowe(session, job, dadosjob = new Job) {
 //////////////////////////////////////////////////////////////////
 
 class Job {
-	constructor(ValorPesquisar, Biblioteca) {
+	constructor(session, ValorPesquisar, Biblioteca, Filtro) {
 
-		this.ValorPesquisar = ValorPesquisar;
+		this.ValorPesquisar = ValorPesquisar.toUpperCase();
 		this.Biblioteca = Biblioteca;
-		this.JCL = escreveJob(this.Biblioteca, this.ValorPesquisar);
+		this.Filtros = Filtro;
+		this.Session = session;
+		this.JCL = escreveJob(this.Session, this.Biblioteca, this.ValorPesquisar, this.Filtros);
 
 	}
 }
@@ -321,6 +397,9 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 		enableScripts: true,
 	};
 
+	const outDD = resultado.outDD.split(resultado.Pesquisa).join("<span>" + resultado.Pesquisa + "</span>");
+	const json = resultado.json.split(resultado.Pesquisa).join("<span>" + resultado.Pesquisa + "</span>");
+
 	const HTMLInicio = `<!DOCTYPE html>
 <html>
 
@@ -381,7 +460,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 
         h1,
-        h2 {
+        h3 {
             text-align: center;
         }
 
@@ -436,16 +515,19 @@ function geraWebView(resultado = new ResultadoPesquisa) {
         }
 		.desbloqueado {
             background-color: var(--vscode-button-secondaryBackground);
+		    color: var(--vscode-button-secondaryForeground);
             box-shadow: none;
 			}
 
 		.desbloqueado:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
+		    color: var(--vscode-button-secondaryForeground);
             box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 		}
 
 		.desbloqueado:active {
             background-color: var(--vscode-button-secondaryHoverBackground);
+		    color: var(--vscode-button-secondaryForeground);
             box-shadow: none;
 		}
 l
@@ -478,11 +560,13 @@ l
 
 		.disponivel {
             background-color: var(--vscode-button-secondaryBackground);
+		    color: var(--vscode-button-secondaryForeground);
             color: var(--vscode-button-color);
 		}
 
 		.disponivel:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
+		    color: var(--vscode-button-secondaryForeground);
             box-shadow: 0px 8px 16px 0px rgba(3, 0, 0, 0.3);
 		}
 
@@ -506,13 +590,17 @@ l
             transform: none;
 		}
 
+		span {
+		    background-color: var(--vscode-button-secondaryHoverBackground);
+		    color: var(--vscode-button-secondaryForeground);
+		}
     </style>
 </head>
 
 <body>
     <div class="cabecalho">
         <h1>Mainframe Search Results</h1>
-        <h2 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h2>
+        <h3 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h3>
 	    <div class="botoes">
            <button id="btLista" type="check" name="vista" onclick="Escolher(this.id)">List</vscode>
            <button id="btOutDD" class="disponivel" type="check" name="vista" onclick="Escolher(this.id)">OutDD</vscode>
@@ -525,8 +613,8 @@ l
 		`
 
 	const HTMLFim = `    </div>
-        <div id="OutDD" class="vista"><code class="outDD">` + resultado.outDD + `</code></div>
-	    <div id="Json" class="vista"><code class="Json">` + resultado.json + `</code></div>`;
+        <div id="OutDD" class="vista"><div class="outDD">` + outDD + `</div></div>
+	    <div id="Json" class="vista"><div class="Json">` + json + `</div></div>`;
 	const HTMLFim2 = `
 	</div>
     <script>
@@ -588,7 +676,9 @@ l
 
 	const LinhaIni = `
 	<tr class="select">
-	    <td class="linha"><a>`;
+	    <td class="linha"><a onclick="abreElemento('`;
+	const LinhaIni2 = `', '`;
+	const LinhaIni3 = `')">`;
 	const LinhaMid = `</a></td >
 	    <td class="ocorrencia">`;
 	const LinhaFim = `</td >
@@ -604,8 +694,22 @@ l
 
 			for (let j = 0; j < resultado.Resultados[i].List.length; j++) {
 
-				const Linha = LinhaIni + resultado.Resultados[i].List[j].line + LinhaMid + resultado.Resultados[i].List[j].text + LinhaFim
-				Lista += Linha;
+				const textoPreSpan = resultado.Resultados[i]
+					.List[j]
+					.text;
+
+				const textoSpan = textoPreSpan.split(resultado.Pesquisa)
+					.join("<span>" + resultado.Pesquisa + "</span>");
+
+				Lista += LinhaIni
+					+ resultado.Resultados[i].Name
+					+ LinhaIni2
+					+ resultado.Resultados[i].List[j].line
+					+ LinhaIni3
+					+ resultado.Resultados[i].List[j].line
+					+ LinhaMid
+					+ textoSpan
+					+ LinhaFim
 			}
 			const element = ElementoIni + resultado.Resultados[i].Name + ElementoIni2 + resultado.Resultados[i].Name + ElementoMid + Lista + ElementoFim
 			Elementos += element;
@@ -623,4 +727,55 @@ l
 	const HTML = HTMLInicio + Elementos + HTMLFim2;
 	console.log(HTML);
 	painel.webview.html = HTML;
+	StatusBar.hide();
+}
+
+function abreElemento(elemento = '', linha = 0, biblioteca = '') {
+
+	// Exemplo:
+	// const ComandoZowe = 'zowe zos-files view data-set "CMNP.MG1D.STG.CORE.#' +
+	// 	Elemento.obterNumeroPacote() +
+	// 	'.' +
+	// 	Elemento.obterPastaPacote() +
+	// 	'(' +
+	// 	Elemento.obterNome() +
+	// 	')"
+	// --response - format - json';
+
+
+	console.log('Elemento a abrir: ' + elemento + 'na linha ' + linha);
+
+	(async () => {
+		// Load connection info from default z/OSMF profile
+
+		const profInfo = new ProfileInfo.ProfileInfo("zowe");
+		await profInfo.readProfilesFromDisk();
+		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
+		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
+		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
+
+		const options = {
+			"file": "C:/Users/d.fonseca.do.canto/Documents/Projectos/Testes/teste.cbl"
+			// "encoding": "UTF-8",
+			// "file": "temp",
+			// "extension": "txt",
+			// "preserveOriginalLetterCase":true,
+            // "record":true
+		};
+		// IDownloadOptions({ failFast: false });
+		const dataset = biblioteca + "(" + elemento + ")";
+		// const dataset = biblioteca;
+		console.log(dataset);
+		// const response = await Download.Download.allMembers(session, biblioteca, options);
+		// const response = await Download.Download.allDataSets(session, dataset, options).finally;
+		// const response = await Download.Get.dataSet(session, dataset, options);
+		// const response = (await Download.Get.dataSet(session, dataset));
+		const response = await Download.Download.dataSet(session, dataset, options);
+
+
+		console.log(response);
+	})().catch((err) => {
+		console.error(err);
+		process.exit(1);
+	});
 }

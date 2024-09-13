@@ -1,8 +1,19 @@
 {
   "name": "zSearch",
-  "publisher": "David Canto",
+  "publisher": "DavidCanto",
   "displayName": "zSearch",
   "description": "A search job extension to run on a mainframe",
+  "keywords": [
+    "mainframe",
+    "David Canto",
+    "zos",
+    "zowe",
+    "zosmf",
+    "search"
+  ],
+  "repository": {
+    "url": "https://github.com/davidcphoto/zSearch.git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.92.0"
@@ -16,7 +27,13 @@
     "commands": [
       {
         "command": "zSearch.Search",
-        "title": "zSearch on library"
+        "title": "zSearch - Find on library",
+        "icon":"$(preview)",
+        "shortTitle": "zSearch - Find"
+      },
+      {
+        "command": "zSearch.Testa",
+        "title": "zSearch Testa"
       }
     ],
     "menus": {
@@ -31,12 +48,28 @@
     "configuration": {
       "title": "Mainframe Search",
       "properties": {
-        "zSearch.JobCard": {
-          "type": "array",
-          "description": "Job Card to be used on job search",
-          "default": "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
+        "zSearch.JobName": {
+          "type": "string",
+          "description": "Job Name to be used in Job Card",
+          "default": "${USER}S",
           "order": 1,
-          "minimum": 1
+          "maximum": 8
+        },
+        "zSearch.JobCardCLASS": {
+          "type": "string",
+          "description": "Job Card Class to be used",
+          "default": "D",
+          "order": 2,
+          "minimum": 1,
+          "maximum": 1
+        },
+        "zSearch.JobCardMSGCLASS": {
+          "type": "string",
+          "description": "Job Card Msgclass to be used",
+          "default": "X",
+          "order": 3,
+          "minimum": 1,
+          "maximum": 1
         }
       }
     }
@@ -64,6 +97,7 @@
   },
   "dependencies": {
     "@zowe/imperative": "^5.27.0",
+    "@zowe/zos-files-for-zowe-sdk": "^7.29.0",
     "@zowe/zos-jobs-for-zowe-sdk": "^7.29.0",
     "@zowe/zosmf-for-zowe-sdk": "^7.29.0",
     "@zowe/zowe-explorer-api": "^2.18.0"
