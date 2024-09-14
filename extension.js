@@ -24,8 +24,6 @@ function activate(context) {
 
 	let teste = vscode.commands.registerCommand('zSearch.Testa', function () {
 
-		abreElemento("EXCIDAVE", 200, "X93182.LIB.SOURCE");
-
 
 
 	})
@@ -117,7 +115,7 @@ function escreveJob(session, Biblioteca = new String, ValorPesquisar = new Strin
 
 	const userid = session.ISession.user;
 
-		const user = vscode.workspace.getConfiguration().get('zSearch.JobName');;
+		const user = vscode.workspace.getConfiguration().get('zSearch.JobName');
 		const userfinal = user.split('${USER}').join(userid);
 		const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
 		const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
@@ -272,7 +270,7 @@ function ObtemRespostaJobZowe(jobExecutado, job = new Job) {
 			.getSpoolContentById(job.Session, jobExecutado.jobname, jobExecutado.jobid, 102).then(resposta => {
 				console.log("resposta getSpoolContent: " + resposta);
 
-				const Resultados = new ResultadoPesquisa(job.ValorPesquisar, resposta);
+				const Resultados = new ResultadoPesquisa(job, resposta);
 				console.log(Resultados);
 
 				geraWebView(Resultados);
@@ -340,7 +338,7 @@ class ItemEncontrado {
 
 class ResultadoPesquisa {
 
-	constructor(ValorPesquisar = '', OUTDD = new String) {
+	constructor(job = new Job, OUTDD = new String) {
 
 		const OUTDDSplit = OUTDD.split('\n');
 		let item;
@@ -359,7 +357,7 @@ class ResultadoPesquisa {
 			} else {
 
 				if (item) {
-					if (OUTDDSplit[i].includes(ValorPesquisar)) {
+					if (OUTDDSplit[i].includes(job.ValorPesquisar)) {
 						Lista.push(OUTDDSplit[i]);
 					}
 				}
@@ -368,8 +366,9 @@ class ResultadoPesquisa {
 
 		}
 
-		this.Pesquisa = ValorPesquisar;
+		this.Pesquisa = job.ValorPesquisar;
 		this.outDD = OUTDD;
+		this.Biblioteca = job.Biblioteca;
 
 		if (item) {
 			ItemTratado.push(new ItemEncontrado(item, Lista));
@@ -660,6 +659,14 @@ l
 			}
 
 		}
+
+// function AbreFx(mensagem) {
+
+//     console.log(mensagem);
+// 	const vscode = acquireVsCodeApi();
+
+// 	vscode.postMessage(mensagem);
+
 	</script>
 	</body >`;
 
@@ -676,9 +683,8 @@ l
 
 	const LinhaIni = `
 	<tr class="select">
-	    <td class="linha"><a onclick="abreElemento('`;
-	const LinhaIni2 = `', '`;
-	const LinhaIni3 = `')">`;
+	    <td class="linha"><a onclick=`;
+	const LinhaIni3 = `>`;
 	const LinhaMid = `</a></td >
 	    <td class="ocorrencia">`;
 	const LinhaFim = `</td >
@@ -701,10 +707,17 @@ l
 				const textoSpan = textoPreSpan.split(resultado.Pesquisa)
 					.join("<span>" + resultado.Pesquisa + "</span>");
 
-				Lista += LinhaIni
+
+				const mensagem = `AbreFx('{"Elemento":"`
 					+ resultado.Resultados[i].Name
-					+ LinhaIni2
+					+ `","Linha":"`
 					+ resultado.Resultados[i].List[j].line
+					+ `","Biblioteca":"`
+					+ resultado.Resultados[i].biblioteca
+					+ `"}')`;
+
+				Lista += LinhaIni
+					+ mensagem
 					+ LinhaIni3
 					+ resultado.Resultados[i].List[j].line
 					+ LinhaMid
@@ -727,26 +740,17 @@ l
 	const HTML = HTMLInicio + Elementos + HTMLFim2;
 	console.log(HTML);
 	painel.webview.html = HTML;
+	painel.webview.onDidReceiveMessage(message => {
+		abreElemento(message);
+	 })
 	StatusBar.hide();
 }
 
-function abreElemento(elemento = '', linha = 0, biblioteca = '') {
+function abreElemento(mensagem) {
 
-	// Exemplo:
-	// const ComandoZowe = 'zowe zos-files view data-set "CMNP.MG1D.STG.CORE.#' +
-	// 	Elemento.obterNumeroPacote() +
-	// 	'.' +
-	// 	Elemento.obterPastaPacote() +
-	// 	'(' +
-	// 	Elemento.obterNome() +
-	// 	')"
-	// --response - format - json';
-
-
-	console.log('Elemento a abrir: ' + elemento + 'na linha ' + linha);
+	console.log('Elemento a abrir: ' + mensagem.Elemento + 'na linha ' + mensagem.Linha);
 
 	(async () => {
-		// Load connection info from default z/OSMF profile
 
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
@@ -754,28 +758,39 @@ function abreElemento(elemento = '', linha = 0, biblioteca = '') {
 		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
 		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
+		const dataset = mensagem.Biblioteca + "(" + mensagem.Elemento + ")";
+		const datasetPath = obtPastaTemporaria(zosmfProfAttrs.profName, dataset);
 		const options = {
-			"file": "C:/Users/d.fonseca.do.canto/Documents/Projectos/Testes/teste.cbl"
-			// "encoding": "UTF-8",
-			// "file": "temp",
-			// "extension": "txt",
-			// "preserveOriginalLetterCase":true,
-            // "record":true
+			"file": datasetPath
 		};
-		// IDownloadOptions({ failFast: false });
-		const dataset = biblioteca + "(" + elemento + ")";
-		// const dataset = biblioteca;
 		console.log(dataset);
-		// const response = await Download.Download.allMembers(session, biblioteca, options);
-		// const response = await Download.Download.allDataSets(session, dataset, options).finally;
-		// const response = await Download.Get.dataSet(session, dataset, options);
-		// const response = (await Download.Get.dataSet(session, dataset));
 		const response = await Download.Download.dataSet(session, dataset, options);
 
+		if (response.success) {
+			AbreFicheiro(datasetPath);
+		}
 
 		console.log(response);
 	})().catch((err) => {
 		console.error(err);
 		process.exit(1);
+	});
+}
+
+function obtPastaTemporaria(sessão='',ficheiro='')  {
+	// zowe.files.temporaryDownloadsFolder.path
+
+	const pastaTemp = vscode.workspace.getConfiguration().get('zowe.files.temporaryDownloadsFolder.path');
+	const ficheiroTemp = pastaTemp + '/zSearch/' + sessão + '/' + ficheiro;
+	console.log(ficheiroTemp);
+	return ficheiroTemp;
+
+}
+
+function AbreFicheiro(filePath = '') {
+
+	const openPath = vscode.Uri.file(filePath);
+	vscode.workspace.openTextDocument(openPath).then(doc => {
+		vscode.window.showTextDocument(doc);
 	});
 }
