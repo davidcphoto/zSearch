@@ -5,7 +5,6 @@ const zowe_explorer_api = require('@zowe/zowe-explorer-api');
 const ProfileInfo = require("@zowe/imperative");
 const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
 const Download = require("@zowe/zos-files-for-zowe-sdk");
-const { profile } = require('console');
 
 
 
@@ -20,13 +19,6 @@ function activate(context) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "zSearch" is now active!');
-
-
-	let teste = vscode.commands.registerCommand('zSearch.Testa', function () {
-
-
-
-	})
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -79,7 +71,6 @@ function activate(context) {
 	StatusBar.tooltip = "Searching the mainframe";
 	context.subscriptions.push(StatusBar);
 	context.subscriptions.push(disposable);
-	context.subscriptions.push(teste);
 }
 
 function introduzirString(Biblioteca = '', BibliotecaChildren) {
@@ -167,16 +158,23 @@ function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren) {
 		BibliotecaChildren.forEach(registo => {
 
 			filtro.forEach(filtro => {
-				if (filtro.endsWith('*')) {
-					if (registo.label.startsWith(filtro.substring(0,filtro.length-1))) {
-						filtroSelecionado.push(registo.label);
-					}
-				} else {
-					if (filtro.startsWith('*')) {
+				switch (true) {
+					case filtro.endsWith('*'):
+					if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
+							filtroSelecionado.push(registo.label);
+						}
+						break;
+					case filtro.startsWith('*'):
 						if (registo.label.endsWith(filtro.substring(1))) {
 							filtroSelecionado.push(registo.label);
 						}
-					}
+						break;
+					case !filtro.includes('*'):
+
+						if (registo.label.startsWith(filtro.substring(0, filtro.length))) {
+							filtroSelecionado.push(registo.label);
+						}
+						break;
 				}
 			})
 		});
@@ -340,7 +338,8 @@ class ResultadoPesquisa {
 
 	constructor(job = new Job, OUTDD = new String) {
 
-		const OUTDDSplit = OUTDD.split('\n');
+		let OUTDDSplit = OUTDD.split('\n');
+		const OUTDDSplitUpper = OUTDDSplit.map(function (x) { return x.toUpperCase(); })
 		let item;
 		let Lista = [];
 		let ItemTratado = [];
@@ -352,13 +351,16 @@ class ResultadoPesquisa {
 
 				if (item) {
 					ItemTratado.push(new ItemEncontrado(item, Lista));
+					Lista = [];
 				}
 				item = OUTDDSplit[i].substring(2, 10);
 			} else {
 
 				if (item) {
-					if (OUTDDSplit[i].includes(job.ValorPesquisar)) {
-						Lista.push(OUTDDSplit[i]);
+					if (OUTDDSplitUpper[i].includes(job.ValorPesquisar)) {
+						if (OUTDDSplitUpper[i].indexOf("SRCHFOR  '" + job.ValorPesquisar + "'")<=0) {
+							Lista.push(OUTDDSplit[i]);
+						}
 					}
 				}
 			}
@@ -373,7 +375,7 @@ class ResultadoPesquisa {
 		if (item) {
 			ItemTratado.push(new ItemEncontrado(item, Lista));
 			this.Resultados = ItemTratado;
-			const code_json = '{"result":' + JSON.stringify(ItemTratado) + '}';
+			const code_json = JSON.stringify(ItemTratado);
 			this.json = JSON.stringify(JSON.parse(code_json), null, 5);
 			this.temResultado = true;
 		} else {
@@ -618,6 +620,7 @@ l
 	</div>
     <script>
 
+	const vscode = acquireVsCodeApi();
         function Escolher(escolha) {
             console.log(escolha);
 
@@ -660,13 +663,12 @@ l
 
 		}
 
-// function AbreFx(mensagem) {
+function AbreFx(mensagem) {
 
-//     console.log(mensagem);
-// 	const vscode = acquireVsCodeApi();
+    console.log(mensagem);
 
-// 	vscode.postMessage(mensagem);
-
+	vscode.postMessage(mensagem);
+}
 	</script>
 	</body >`;
 
@@ -713,7 +715,7 @@ l
 					+ `","Linha":"`
 					+ resultado.Resultados[i].List[j].line
 					+ `","Biblioteca":"`
-					+ resultado.Resultados[i].biblioteca
+					+ resultado.Biblioteca
 					+ `"}')`;
 
 				Lista += LinhaIni
@@ -724,7 +726,16 @@ l
 					+ textoSpan
 					+ LinhaFim
 			}
-			const element = ElementoIni + resultado.Resultados[i].Name + ElementoIni2 + resultado.Resultados[i].Name + ElementoMid + Lista + ElementoFim
+			const element = ElementoIni
+				+ resultado.Resultados[i].Name
+				+ ElementoIni2
+				+ resultado.Resultados[i].Name
+				+ " ("
+				+ resultado.Resultados[i].List.length				+ ")"
+				+ ElementoMid
+				+ Lista
+				+ ElementoFim
+
 			Elementos += element;
 		}
 
@@ -748,7 +759,8 @@ l
 
 function abreElemento(mensagem) {
 
-	console.log('Elemento a abrir: ' + mensagem.Elemento + 'na linha ' + mensagem.Linha);
+	const mensageJson = JSON.parse(mensagem);
+	console.log('Elemento a abrir: ' + mensageJson.Elemento + 'na linha ' + mensageJson.Linha);
 
 	(async () => {
 
@@ -758,7 +770,7 @@ function abreElemento(mensagem) {
 		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
 		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
-		const dataset = mensagem.Biblioteca + "(" + mensagem.Elemento + ")";
+		const dataset = mensageJson.Biblioteca + "(" + mensageJson.Elemento + ")";
 		const datasetPath = obtPastaTemporaria(zosmfProfAttrs.profName, dataset);
 		const options = {
 			"file": datasetPath
@@ -767,7 +779,7 @@ function abreElemento(mensagem) {
 		const response = await Download.Download.dataSet(session, dataset, options);
 
 		if (response.success) {
-			AbreFicheiro(datasetPath);
+			AbreFicheiro(datasetPath, Number(mensageJson.Linha));
 		}
 
 		console.log(response);
@@ -787,10 +799,16 @@ function obtPastaTemporaria(sessão='',ficheiro='')  {
 
 }
 
-function AbreFicheiro(filePath = '') {
+function AbreFicheiro(filePath = '', linha = 0) {
 
 	const openPath = vscode.Uri.file(filePath);
 	vscode.workspace.openTextDocument(openPath).then(doc => {
-		vscode.window.showTextDocument(doc);
+
+		vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {
+			let range = doc.lineAt(linha - 1).range;
+			editor.selection = new vscode.Selection(range.start, range.end);
+			editor.revealRange(range);
+
+		});
 	});
 }

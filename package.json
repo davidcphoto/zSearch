@@ -30,10 +30,6 @@
         "title": "zSearch - Find on library",
         "icon":"$(preview)",
         "shortTitle": "zSearch - Find"
-      },
-      {
-        "command": "zSearch.Testa",
-        "title": "zSearch Testa"
       }
     ],
     "menus": {

@@ -4,42 +4,49 @@ Search a mainframe library running ISRSUPC in a job.
 
 ## Features
 
-- [x] Search the mainframe for a string
-- [x] Select the library from the Zowe Explorer
-- [ ] Filter the search library elements to reduce search job execution time
-- [x] Visualize search results
-  - [x] List of elements
-  - [x] Json format
-  - [x] OutDD format
-- [x] Showed information
-  - [x] Show line number
-  - [x] Show the line where the search string
-- [ ] Open a element from the search results
-- [x] Remove the dependency from Zowe CLI
-- [x] highlight the search string
-  - [x] List
-  - [x] OutDD
-  - [x] Json
-- [ ] Link to open element
+1. Search the mainframe for a string
+1. Select the library from the Zowe Explorer
+1. Filter the search library elements
+1. Visualize search results
+   1. List of elements
+   1. Json
+   1. OutDD
+1. Showed information
+   1. Show line number
+   1. Show the line where the search string
+1. Opens an item from the search results list in the row where that result is located.
+1. highlight the search string
+   1. List
+   1. OutDD
+   1. Json
 
 ## Requirements
 
-- Zowe Explorer
+- Zowe Explorer VS Code Extension.
+- A zosmf connection profile.
+- A valied User ID.
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
 * `zSearch.JobName`: Job Name to be used on Job Card.
+
+  >__Default value:__ _${USER}S_
+  >
+  > 💡 __Note:__ In the job card the variable _${USER}_ will be replaced by the _userid_ associated with the active _zosmf_ profile.
+
 * `zSearch.JobCardCLASS`: Class to be used on Job Card.
+
+  >__Default value:__ D
+
 * `zSearch.JobCardMSGCLASS`: Message Class to be used on Job Card.
 
-
->💡 Note: The Job name has the default __${USER}S__.
+  >__Default value:__ X
 
 ## Known Issues
 
-- n/a
+- If the search string is in lowercase it will not be highted.
 
 ## Release Notes
 
