@@ -2,6 +2,7 @@
   "name": "zSearch",
   "publisher": "DavidCanto",
   "displayName": "zSearch",
+  "icon": "imagens/zSearch.png",
   "description": "A search job extension to run on a mainframe",
   "keywords": [
     "mainframe",
