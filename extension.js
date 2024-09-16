@@ -393,7 +393,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 
 	let painel;
-	painel = vscode.window.createWebviewPanel('Search Result', 'Search Result', vscode.ViewColumn.Two)
+	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', vscode.ViewColumn.Two)
 	painel.webview.options = {
 		enableScripts: true,
 	};
@@ -600,8 +600,10 @@ l
 
 <body>
     <div class="cabecalho">
-        <h1>Mainframe Search Results</h1>
+	    <div>
+		<h1>Mainframe Search Results</h1>
         <h3 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h3>
+		</div>
 	    <div class="botoes">
            <button id="btLista" type="check" name="vista" onclick="Escolher(this.id)">List</vscode>
            <button id="btOutDD" class="disponivel" type="check" name="vista" onclick="Escolher(this.id)">OutDD</vscode>
