@@ -45,17 +45,18 @@ function activate(context) {
 
 					seleccao = selectedText.toUpperCase();
 
-					trataFiltros(seleccao, Biblioteca, BibliotecaChildren);
+					introduzirString(seleccao, Biblioteca, BibliotecaChildren);
+					// trataFiltros(seleccao, Biblioteca, BibliotecaChildren);
 
 				} else {
 
-					introduzirString(Biblioteca, BibliotecaChildren);
+					introduzirString('', Biblioteca, BibliotecaChildren);
 
 				}
 
 			} else {
 
-				introduzirString(Biblioteca, BibliotecaChildren);
+				introduzirString('', Biblioteca, BibliotecaChildren);
 			}
 
 
@@ -73,13 +74,13 @@ function activate(context) {
 	context.subscriptions.push(disposable);
 }
 
-function introduzirString(Biblioteca = '', BibliotecaChildren) {
+function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren) {
 
 	if (BibliotecaChildren.length > 0) {
 
 		vscode.window.showInputBox({
 			placeHolder: "Search string",
-			value: "",
+			value: seleccao,
 			title: "zSearch - Insert the search string ",
 			"ignoreFocusOut": true
 		}).then((value) => {
@@ -102,7 +103,7 @@ function escreveJob(session, Biblioteca = new String, ValorPesquisar = new Strin
 
 	// "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
 
-		let ValorMostra;
+		// let ValorMostra;
 
 	const userid = session.ISession.user;
 
@@ -110,13 +111,13 @@ function escreveJob(session, Biblioteca = new String, ValorPesquisar = new Strin
 		const userfinal = user.split('${USER}').join(userid);
 		const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
 		const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
-		if (ValorPesquisar.length > 15) {
+		// if (ValorPesquisar.length > 14) {
 
-			ValorMostra = ValorPesquisar.substring(0, 12) + '...';
-		} else {
-			ValorMostra = ValorPesquisar;
-		}
-	const JobCard = '//' + userfinal + " JOB ,'Search for " + ValorMostra + "',MSGCLASS=" + MSGCLASS + ",CLASS=" + CLASS + ",REGION=6M";
+		// 	ValorMostra = ValorPesquisar.substring(0, 11) + '...';
+		// } else {
+		// 	ValorMostra = ValorPesquisar;
+		// }
+	const JobCard = '//' + userfinal + " JOB ,'zSearch',MSGCLASS=" + MSGCLASS + ",CLASS=" + CLASS + ",REGION=6M";
 		let filtroPesquisa = ObtemFiltroPesquisar(filtros);
 
 		const job = JobCard + `
@@ -710,7 +711,6 @@ function AbreFx(mensagem) {
 
 				const textoSpan = textoPreSpan.split(resultado.Pesquisa)
 					.join("<span>" + resultado.Pesquisa + "</span>");
-
 
 				const mensagem = `AbreFx('{"Elemento":"`
 					+ resultado.Resultados[i].Name
