@@ -2,5 +2,9 @@
     "util.LastSearch": "QUAL.LIB.SOURCE",
     "cSpell.words": [
         "hiliting"
-    ]
+    ],
+    "markdown.extension.extraLangIds": [],
+    "markdown.extension.print.theme": "dark",
+    "markdown.extension.tableFormatter.normalizeIndentation": true,
+    "markdown.extension.toc.updateOnSave": false
 }

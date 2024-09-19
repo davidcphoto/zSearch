@@ -3,17 +3,13 @@
 Search a mainframe library running a _jcl_ with __ISRSUPC__.
 
 ## Table of Contents
-- [Mainframe Search README](#mainframe-search-readme)
-  - [Table of Contents](#table-of-contents)
+
   - [1. Features](#1-features)
   - [2. Requirements](#2-requirements)
   - [3. Settings](#3-settings)
   - [4. How to...](#4-how-to)
   - [5. Known Issues](#5-known-issues)
   - [6. Release Notes](#6-release-notes)
-    - [1.0.3](#103)
-    - [1.0.2](#102)
-    - [1.0.1](#101)
 
 
 
@@ -93,13 +89,10 @@ This extension contributes the following settings:
 ## 6. Release Notes
 
 ### 1.0.3
-
-Correction of the zowe session access.
+- Correction of the zowe session access.
 
 ### 1.0.2
-
-Correcting the job definition
+- Correcting the job definition
 
 ### 1.0.1
-
-Initial release of zSearch
+- Initial release of zSearch
