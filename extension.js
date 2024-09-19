@@ -6,7 +6,7 @@ const ProfileInfo = require("@zowe/imperative");
 const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
 const Download = require("@zowe/zos-files-for-zowe-sdk");
 
-
+var SessaoActiva;
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -20,6 +20,10 @@ function activate(context) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "zSearch" is now active!');
 
+	let disposable2 = vscode.commands.registerCommand('zSearch.Click', function () {
+
+		vscode.window.showInformationMessage("zSeach executing");
+	})
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -30,8 +34,10 @@ function activate(context) {
 
 		const Biblioteca = node.label;
 		const BibliotecaChildren = node.children;
+		const sessao = node.mParent.session;
+		SessaoActiva = node.mParent.session;
 
-		console.log(BibliotecaChildren);
+		console.log(sessao);
 
 		if (Biblioteca) {
 			const editor = vscode.window.activeTextEditor;
@@ -45,18 +51,18 @@ function activate(context) {
 
 					seleccao = selectedText.toUpperCase();
 
-					introduzirString(seleccao, Biblioteca, BibliotecaChildren);
+					introduzirString(seleccao, Biblioteca, BibliotecaChildren, sessao);
 					// trataFiltros(seleccao, Biblioteca, BibliotecaChildren);
 
 				} else {
 
-					introduzirString('', Biblioteca, BibliotecaChildren);
+					introduzirString('', Biblioteca, BibliotecaChildren, sessao);
 
 				}
 
 			} else {
 
-				introduzirString('', Biblioteca, BibliotecaChildren);
+				introduzirString('', Biblioteca, BibliotecaChildren, sessao);
 			}
 
 
@@ -72,9 +78,10 @@ function activate(context) {
 	StatusBar.tooltip = "Searching the mainframe";
 	context.subscriptions.push(StatusBar);
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable2);
 }
 
-function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren) {
+function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren, sessao) {
 
 	if (BibliotecaChildren.length > 0) {
 
@@ -85,7 +92,7 @@ function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren) {
 			"ignoreFocusOut": true
 		}).then((value) => {
 
-			trataFiltros(value, Biblioteca, BibliotecaChildren);
+			trataFiltros(value, Biblioteca, BibliotecaChildren, sessao);
 		});
 
 	}
@@ -103,24 +110,24 @@ function escreveJob(session, Biblioteca = new String, ValorPesquisar = new Strin
 
 	// "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
 
-		// let ValorMostra;
+	// let ValorMostra;
 
 	const userid = session.ISession.user;
 
-		const user = vscode.workspace.getConfiguration().get('zSearch.JobName');
-		const userfinal = user.split('${USER}').join(userid);
-		const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
-		const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
-		// if (ValorPesquisar.length > 14) {
+	const user = vscode.workspace.getConfiguration().get('zSearch.JobName');
+	const userfinal = user.split('${USER}').join(userid);
+	const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
+	const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
+	// if (ValorPesquisar.length > 14) {
 
-		// 	ValorMostra = ValorPesquisar.substring(0, 11) + '...';
-		// } else {
-		// 	ValorMostra = ValorPesquisar;
-		// }
+	// 	ValorMostra = ValorPesquisar.substring(0, 11) + '...';
+	// } else {
+	// 	ValorMostra = ValorPesquisar;
+	// }
 	const JobCard = '//' + userfinal + " JOB ,'zSearch',MSGCLASS=" + MSGCLASS + ",CLASS=" + CLASS + ",REGION=6M";
-		let filtroPesquisa = ObtemFiltroPesquisar(filtros);
+	let filtroPesquisa = ObtemFiltroPesquisar(filtros);
 
-		const job = JobCard + `
+	const job = JobCard + `
 //SEARCH  EXEC PGM=ISRSUPC,
 //            PARM=(SRCHCMP,
 //            'ANYC')
@@ -130,7 +137,7 @@ function escreveJob(session, Biblioteca = new String, ValorPesquisar = new Strin
 //SYSIN  DD *
 SRCHFOR  '` + ValorPesquisar + `'
 ` + filtroPesquisa +
-			`/*`;
+		`/*`;
 
 
 
@@ -139,7 +146,7 @@ SRCHFOR  '` + ValorPesquisar + `'
 
 }
 
-function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren) {
+function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren, sessao) {
 
 	vscode.window.showInputBox({
 		placeHolder: "Search filter",
@@ -161,7 +168,7 @@ function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren) {
 			filtro.forEach(filtro => {
 				switch (true) {
 					case filtro.endsWith('*'):
-					if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
+						if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
 							filtroSelecionado.push(registo.label);
 						}
 						break;
@@ -180,28 +187,41 @@ function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren) {
 			})
 		});
 
-		trataSessao(ValorPesquisar, Biblioteca, filtroSelecionado)
+		trataSessao(ValorPesquisar, Biblioteca, filtroSelecionado, sessao)
 	});
 
 }
 
 //////////////////////////////////////////////////////////////////
-function trataSessao(ValorPesquisar, Biblioteca, value) {
+function trataSessao(ValorPesquisar, Biblioteca, value, sessao) {
 
 	(async () => {
+		if (!sessao){
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
-		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
-		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
-		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
+		if (profInfo) {
+			const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
+			const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
+			const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
-		const job = new Job(session, ValorPesquisar, Biblioteca, value);
+			const job = new Job(session, ValorPesquisar, Biblioteca, value);
 
-		executaJobZowe(job);
+			executaJobZowe(job);
+		}
+
+		else{
+			vscode.window.showErrorMessage('No profile info');
+			}
+		} else {
+			const job = new Job(sessao, ValorPesquisar, Biblioteca, value);
+
+			executaJobZowe(job);
+		}
+
+
 
 	})().catch((err) => {
-		console.error('ObtemRespostaJobZowe - erro: ' + err);
-		process.exit(1);
+		console.error('trataSessao - erro: ' + err);
 	});
 
 }
@@ -246,13 +266,12 @@ function executaJobZowe(job = new Job) {
 			.submitJclNotify(job.Session, job.JCL)
 			.then(resultado => {
 
-				 ObtemRespostaJobZowe(resultado, job);
+				ObtemRespostaJobZowe(resultado, job);
 
 			});
 
 	})().catch((err) => {
 		console.error('executaJobZowe - erro: ' + err);
-		process.exit(1);
 	});
 }
 
@@ -274,14 +293,12 @@ function ObtemRespostaJobZowe(jobExecutado, job = new Job) {
 
 				geraWebView(Resultados);
 
-			}).catch ((err) => {
+			}).catch((err) => {
 				console.error('getSpoolContent - erro: ' + err);
-			process.exit(1);
-		});
+			});
 
 	})().catch((err) => {
 		console.error('ObtemRespostaJobZowe - erro: ' + err);
-		process.exit(1);
 	});
 }
 
@@ -359,7 +376,7 @@ class ResultadoPesquisa {
 
 				if (item) {
 					if (OUTDDSplitUpper[i].includes(job.ValorPesquisar)) {
-						if (OUTDDSplitUpper[i].indexOf("SRCHFOR  '" + job.ValorPesquisar + "'")<=0) {
+						if (OUTDDSplitUpper[i].indexOf("SRCHFOR  '" + job.ValorPesquisar + "'") <= 0) {
 							Lista.push(OUTDDSplit[i]);
 						}
 					}
@@ -397,6 +414,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', vscode.ViewColumn.Two)
 	painel.webview.options = {
 		enableScripts: true,
+
 	};
 
 	const outDD = resultado.outDD.split(resultado.Pesquisa).join("<span>" + resultado.Pesquisa + "</span>");
@@ -733,7 +751,7 @@ function AbreFx(mensagem) {
 				+ ElementoIni2
 				+ resultado.Resultados[i].Name
 				+ " ("
-				+ resultado.Resultados[i].List.length				+ ")"
+				+ resultado.Resultados[i].List.length + ")"
 				+ ElementoMid
 				+ Lista
 				+ ElementoFim
@@ -755,7 +773,7 @@ function AbreFx(mensagem) {
 	painel.webview.html = HTML;
 	painel.webview.onDidReceiveMessage(message => {
 		abreElemento(message);
-	 })
+	})
 	StatusBar.hide();
 }
 
@@ -769,8 +787,8 @@ function abreElemento(mensagem) {
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
 		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
-		const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
-		const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
+		// const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
+		// const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
 		const dataset = mensageJson.Biblioteca + "(" + mensageJson.Elemento + ")";
 		const datasetPath = obtPastaTemporaria(zosmfProfAttrs.profName, dataset);
@@ -778,7 +796,7 @@ function abreElemento(mensagem) {
 			"file": datasetPath
 		};
 		console.log(dataset);
-		const response = await Download.Download.dataSet(session, dataset, options);
+		const response = await Download.Download.dataSet(SessaoActiva, dataset, options);
 
 		if (response.success) {
 			AbreFicheiro(datasetPath, Number(mensageJson.Linha));
@@ -787,11 +805,10 @@ function abreElemento(mensagem) {
 		console.log(response);
 	})().catch((err) => {
 		console.error(err);
-		process.exit(1);
 	});
 }
 
-function obtPastaTemporaria(sessão='',ficheiro='')  {
+function obtPastaTemporaria(sessão = '', ficheiro = '') {
 	// zowe.files.temporaryDownloadsFolder.path
 
 	const pastaTemp = vscode.workspace.getConfiguration().get('zowe.files.temporaryDownloadsFolder.path');

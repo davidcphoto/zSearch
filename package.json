@@ -28,9 +28,9 @@
     "commands": [
       {
         "command": "zSearch.Search",
-        "title": "zSearch - Find on library",
-        "icon":"$(preview)",
-        "shortTitle": "zSearch - Find"
+        "title": "zSearch - Search on library",
+        "icon": "$(preview)",
+        "shortTitle": "zSearch - Search"
       }
     ],
     "menus": {
@@ -38,12 +38,12 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr)/",
           "command": "zSearch.Search",
-          "group": "100_zSearch01"
+          "group": "900_zSearch01"
         }
       ]
     },
     "configuration": {
-      "title": "Mainframe Search",
+      "title": "zSearch",
       "properties": {
         "zSearch.JobName": {
           "type": "string",
@@ -90,10 +90,19 @@
     "typescript": "^5.2.2"
   },
   "peerDependencies": {
-    "@zowe/core-for-zowe-sdk": "^7.0.0"
+    "@zowe/cli": "^7.29.2",
+    "@zowe/cli-test-utils": "7.29.0",
+    "@zowe/core-for-zowe-sdk": "^7.0.0",
+    "@zowe/imperative": "^5.27.1",
+    "@zowe/zos-console-for-zowe-sdk": "^7.29.2",
+    "@zowe/zos-files-for-zowe-sdk": "^7.29.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^7.29.0",
+    "@zowe/zosmf-for-zowe-sdk": "^7.29.0"
   },
   "dependencies": {
-    "@zowe/imperative": "^5.27.0",
+    "@zowe/cli": "^7.29.2",
+    "@zowe/imperative": "^5.27.1",
+    "@zowe/zos-console-for-zowe-sdk": "^7.29.2",
     "@zowe/zos-files-for-zowe-sdk": "^7.29.0",
     "@zowe/zos-jobs-for-zowe-sdk": "^7.29.0",
     "@zowe/zosmf-for-zowe-sdk": "^7.29.0",
