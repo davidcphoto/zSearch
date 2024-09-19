@@ -3,13 +3,18 @@
 Search a mainframe library running a _jcl_ with __ISRSUPC__.
 
 ## Table of Contents
+- [Mainframe Search README](#mainframe-search-readme)
+  - [Table of Contents](#table-of-contents)
+  - [1. Features](#1-features)
+  - [2. Requirements](#2-requirements)
+  - [3. Settings](#3-settings)
+  - [4. How to...](#4-how-to)
+  - [5. Known Issues](#5-known-issues)
+  - [6. Release Notes](#6-release-notes)
+    - [1.0.3](#103)
+    - [1.0.2](#102)
+    - [1.0.1](#101)
 
-1. [Features](##Features)
-2. [Requirements](##Requirements)
-3. [Settings](##Settings)
-4. [How to...](##How-to...)
-5. [Known Issues](##Known-Issues)
-6. [Release Notes](##Release-Notes)
 
 
 ## 1. Features
@@ -34,7 +39,7 @@ Search a mainframe library running a _jcl_ with __ISRSUPC__.
 
 - [Zowe Explorer](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe) VSCode Extension.
 - A zosmf connection profile.
-- A valied User ID.
+- A valid mainframe UserID.
 
 ## 3. Settings
 
@@ -76,8 +81,8 @@ This extension contributes the following settings:
 > ### 💡 __Filter Facts:__
 >
 > 1. Filter can select elements that start or end with a string:
->    1. Start with a alfa-numeric string (example: __'aaa*'__ or __'aaa'__)
->    1. Ends with a alfa-numeric string (example: __'*aaa'__)
+>    1. Start with the alfa-numeric string _aaa_ (example: __'aaa*'__ or __'aaa'__)
+>    1. Ends with the alfa-numeric string _aaa_ (example: __'*aaa'__)
 >    1. No filter (example: __''__ or __'*'__)
 > 2. More than one filter can be user if separated by a coma (example: __'aaa*, *aaa'__)
 ---
@@ -98,5 +103,3 @@ Correcting the job definition
 ### 1.0.1
 
 Initial release of zSearch
-
-[Return to the beginning](##-Index)
