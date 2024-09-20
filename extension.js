@@ -52,7 +52,6 @@ function activate(context) {
 					seleccao = selectedText.toUpperCase();
 
 					introduzirString(seleccao, Biblioteca, BibliotecaChildren, sessao);
-					// trataFiltros(seleccao, Biblioteca, BibliotecaChildren);
 
 				} else {
 
@@ -92,7 +91,9 @@ function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren, se
 			"ignoreFocusOut": true
 		}).then((value) => {
 
-			trataFiltros(value, Biblioteca, BibliotecaChildren, sessao);
+			if (value) {
+				trataFiltros(value, Biblioteca, BibliotecaChildren, sessao);
+			}
 		});
 
 	}
@@ -411,14 +412,15 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 
 	let painel;
+
 	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', vscode.ViewColumn.Two)
 	painel.webview.options = {
 		enableScripts: true,
 
 	};
 
-	const outDD = resultado.outDD.split(resultado.Pesquisa).join("<span>" + resultado.Pesquisa + "</span>");
-	const json = resultado.json.split(resultado.Pesquisa).join("<span>" + resultado.Pesquisa + "</span>");
+	const json = Hilite(resultado.json, resultado.Pesquisa);
+	const outDD = Hilite(resultado.outDD.toString(), resultado.Pesquisa);
 
 	const HTMLInicio = `<!DOCTYPE html>
 <html>
@@ -484,14 +486,20 @@ function geraWebView(resultado = new ResultadoPesquisa) {
             text-align: center;
         }
 
-        table{
-            transition: all .5s ease;
 
+        .table{
+            transition: all .3s ease;
             display: none;
             position: relative;
             min-width: 160px;
             z-index: 1;
-        }
+		}
+
+		// .visivel .table {
+		//     transition: all .3s ease;
+        //     scale=1;
+		// 	opacity=1;
+		// }
         .vista{
             display: none;
             z-index: 1;
@@ -564,6 +572,7 @@ l
         }
 
 		.outDD {
+		    font-family:monospace;
 		    display: block;
 		    white-space: pre;
 		    position: relative;
@@ -590,7 +599,7 @@ l
             box-shadow: 0px 8px 16px 0px rgba(3, 0, 0, 0.3);
 		}
 
-		.visivel, .visivel .visivel table {
+		.visivel, .visivel .visivel .table {
 		    display: block;
 		}
 		.visivel .visivel p:before {
@@ -696,7 +705,7 @@ function AbreFx(mensagem) {
 	const ElementoIni = `        <div id="`;
 	const ElementoIni2 = `" class="elemento"><p onclick="mostraelemento(this.parentNode.id)">`;
 	const ElementoMid = `</p>
-            <table id="table">
+            <table class="table">
                 <tr>
                     <th class="linha">Line</th>
                     <th class="ocorrencia">Occurrence</th>
@@ -727,8 +736,10 @@ function AbreFx(mensagem) {
 					.List[j]
 					.text;
 
-				const textoSpan = textoPreSpan.split(resultado.Pesquisa)
-					.join("<span>" + resultado.Pesquisa + "</span>");
+				// const textoSpan = textoPreSpan.split(resultado.Pesquisa)
+				// 	.join("<span>" + resultado.Pesquisa + "</span>");
+
+				const textoSpan = Hilite(textoPreSpan, resultado.Pesquisa);
 
 				const mensagem = `AbreFx('{"Elemento":"`
 					+ resultado.Resultados[i].Name
@@ -830,4 +841,30 @@ function AbreFicheiro(filePath = '', linha = 0) {
 
 		});
 	});
+}
+
+function Hilite(Texto='', subTexto='') {
+
+	let posi, posf = 0;
+	let TextoFinal = '';
+
+	const TextoUperCase = Texto.toUpperCase();
+
+	while (posf >= 0) {
+		posf = TextoUperCase.indexOf(subTexto.toUpperCase(), posf);
+		if (posf >= 0) {
+			TextoFinal += Texto.substring(posi, posf) + "<span>";
+			posi = posf;
+			posf += subTexto.length;
+			TextoFinal += Texto.substring(posi, posf) + "</span>";
+			posi = posf;
+
+		} else {
+			TextoFinal += Texto.substring(posi);
+		}
+
+	}
+
+	return TextoFinal;
+
 }
