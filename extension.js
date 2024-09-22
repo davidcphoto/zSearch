@@ -20,10 +20,11 @@ function activate(context) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "zSearch" is now active!');
 
-	let disposable2 = vscode.commands.registerCommand('zSearch.Click', function () {
+	// let disposable2 = vscode.commands.registerCommand('zSearch.Click', async function () {
 
-		vscode.window.showInformationMessage("zSeach executing");
-	})
+	// 	// console.log("selecionado " + await getSearchFiters());
+
+	// })
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -77,54 +78,70 @@ function activate(context) {
 	StatusBar.tooltip = "Searching the mainframe";
 	context.subscriptions.push(StatusBar);
 	context.subscriptions.push(disposable);
-	context.subscriptions.push(disposable2);
+	// context.subscriptions.push(disposable2);
 }
 
 function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren, sessao) {
 
 	if (BibliotecaChildren.length > 0) {
 
-		vscode.window.showInputBox({
-			placeHolder: "Search string",
-			value: seleccao,
-			title: "zSearch - Insert the search string ",
-			"ignoreFocusOut": true
-		}).then((value) => {
+		getSearchString(seleccao).then(resultado => {
+			getSearchFiters().then(filtros => {
 
-			if (value) {
-				trataFiltros(value, Biblioteca, BibliotecaChildren, sessao);
-			}
-		});
+				ValidaFiltro(resultado, Biblioteca, BibliotecaChildren, filtros, sessao);
+			})
 
+		})
 	}
+}
+
+function ValidaFiltro(resultado = '', Biblioteca = '', BibliotecaChildren, filtros, sessao) {
+
+	let filtroSelecionado = [];
+	BibliotecaChildren.forEach(registo => {
+
+		filtros.forEach(resultado => {
+			const filtro = resultado.label.toUpperCase();
+			switch (true) {
+				case filtro.endsWith('*'):
+					if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
+						filtroSelecionado.push(registo.label);
+					}
+					break;
+				case filtro.startsWith('*'):
+					if (registo.label.endsWith(filtro.substring(1))) {
+						filtroSelecionado.push(registo.label);
+					}
+					break;
+				case !filtro.includes('*'):
+
+					if (registo.label.startsWith(filtro.substring(0, filtro.length))) {
+						filtroSelecionado.push(registo.label);
+					}
+					break;
+			}
+		})
+	})
+	trataSessao(resultado, Biblioteca, filtroSelecionado, sessao)
 }
 
 // This method is called when your extension is deactivated
 function deactivate() { }
-
 module.exports = {
+
 	activate,
 	deactivate
 }
 //////////////////////////////////////////////////////////////////
 function escreveJob(session, Biblioteca = new String, ValorPesquisar = new String, filtros = []) {
 
-	// "//X93182SR JOB ,'Search',MSGCLASS=X,CLASS=D,REGION=6M",
-
-	// let ValorMostra;
-
 	const userid = session.ISession.user;
 
-	const user = vscode.workspace.getConfiguration().get('zSearch.JobName');
+	const user = vscode.workspace.getConfiguration().get('zSearch.JobCard.Name');
 	const userfinal = user.split('${USER}').join(userid);
-	const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardCLASS');
-	const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCardMSGCLASS');
-	// if (ValorPesquisar.length > 14) {
+	const CLASS = vscode.workspace.getConfiguration().get('zSearch.JobCard.CLASS');
+	const MSGCLASS = vscode.workspace.getConfiguration().get('zSearch.JobCard.MSGCLASS');
 
-	// 	ValorMostra = ValorPesquisar.substring(0, 11) + '...';
-	// } else {
-	// 	ValorMostra = ValorPesquisar;
-	// }
 	const JobCard = '//' + userfinal + " JOB ,'zSearch',MSGCLASS=" + MSGCLASS + ",CLASS=" + CLASS + ",REGION=6M";
 	let filtroPesquisa = ObtemFiltroPesquisar(filtros);
 
@@ -143,53 +160,6 @@ SRCHFOR  '` + ValorPesquisar + `'
 
 
 	return job.toUpperCase();
-	// })
-
-}
-
-function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren, sessao) {
-
-	vscode.window.showInputBox({
-		placeHolder: "Search filter",
-		title: "zSearch - Filter search elements",
-		prompt: "Filter search elementos. Example: AA*, BB*",
-		"ignoreFocusOut": true
-	}).then(value => {
-
-		StatusBar.text = 'Searching for ' + ValorPesquisar;
-		StatusBar.show();
-
-		const valueUpperCase = value.toUpperCase();
-		const valueTrim = valueUpperCase.split(' ').join('');
-
-		const filtro = valueTrim.split(',');
-		let filtroSelecionado = [];
-		BibliotecaChildren.forEach(registo => {
-
-			filtro.forEach(filtro => {
-				switch (true) {
-					case filtro.endsWith('*'):
-						if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
-							filtroSelecionado.push(registo.label);
-						}
-						break;
-					case filtro.startsWith('*'):
-						if (registo.label.endsWith(filtro.substring(1))) {
-							filtroSelecionado.push(registo.label);
-						}
-						break;
-					case !filtro.includes('*'):
-
-						if (registo.label.startsWith(filtro.substring(0, filtro.length))) {
-							filtroSelecionado.push(registo.label);
-						}
-						break;
-				}
-			})
-		});
-
-		trataSessao(ValorPesquisar, Biblioteca, filtroSelecionado, sessao)
-	});
 
 }
 
@@ -197,27 +167,10 @@ function trataFiltros(ValorPesquisar, Biblioteca, BibliotecaChildren, sessao) {
 function trataSessao(ValorPesquisar, Biblioteca, value, sessao) {
 
 	(async () => {
-		if (!sessao){
-		const profInfo = new ProfileInfo.ProfileInfo("zowe");
-		await profInfo.readProfilesFromDisk();
-		if (profInfo) {
-			const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
-			const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
-			const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
-			const job = new Job(session, ValorPesquisar, Biblioteca, value);
+		const job = new Job(sessao, ValorPesquisar, Biblioteca, value);
 
-			executaJobZowe(job);
-		}
-
-		else{
-			vscode.window.showErrorMessage('No profile info');
-			}
-		} else {
-			const job = new Job(sessao, ValorPesquisar, Biblioteca, value);
-
-			executaJobZowe(job);
-		}
+		executaJobZowe(job);
 
 
 
@@ -412,8 +365,9 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 
 	let painel;
+	const posiçãoPainel = vscode.workspace.getConfiguration().get('zSearch.PanelPosition');
 
-	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', vscode.ViewColumn.Two)
+	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', posiçãoPainel)
 	painel.webview.options = {
 		enableScripts: true,
 
@@ -736,9 +690,6 @@ function AbreFx(mensagem) {
 					.List[j]
 					.text;
 
-				// const textoSpan = textoPreSpan.split(resultado.Pesquisa)
-				// 	.join("<span>" + resultado.Pesquisa + "</span>");
-
 				const textoSpan = Hilite(textoPreSpan, resultado.Pesquisa);
 
 				const mensagem = `AbreFx('{"Elemento":"`
@@ -798,8 +749,6 @@ function abreElemento(mensagem) {
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
 		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
-		// const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
-		// const session = ProfileInfo.ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
 
 		const dataset = mensageJson.Biblioteca + "(" + mensageJson.Elemento + ")";
 		const datasetPath = obtPastaTemporaria(zosmfProfAttrs.profName, dataset);
@@ -843,7 +792,7 @@ function AbreFicheiro(filePath = '', linha = 0) {
 	});
 }
 
-function Hilite(Texto='', subTexto='') {
+function Hilite(Texto = '', subTexto = '') {
 
 	let posi, posf = 0;
 	let TextoFinal = '';
@@ -867,4 +816,121 @@ function Hilite(Texto='', subTexto='') {
 
 	return TextoFinal;
 
+}
+
+async function getSearchString(valorInicial) {
+
+	let choices = vscode.workspace.getConfiguration().get('zSearch.SearchStrings.ListOfPreviousSearchStrings');
+
+	return new Promise((resolve) => {
+		const quickPick = vscode.window.createQuickPick();
+		quickPick.items = choices.map(choice => ({ label: choice }));
+		quickPick.step = 1;
+		quickPick.totalSteps = 2;
+		quickPick.value = valorInicial;
+		quickPick.title = 'Select search string';
+		quickPick.placeholder = 'Search string';
+
+		quickPick.onDidChangeValue(() => {
+			// INJECT user values into proposed values
+			if (!choices.includes(quickPick.value)) quickPick.items = [quickPick.value, ...choices].map(label => ({ label }))
+		})
+
+		quickPick.onDidAccept(() => {
+			const selection = quickPick.activeItems[0]
+			resolve(selection.label)
+			if (!choices.includes(selection.label)) {
+				choices.unshift(selection.label)
+				if (choices.length > vscode.workspace.getConfiguration().get('zSearch.SearchStrings.NumberOfPreviousSearchStrings')) {
+					choices.pop();
+				}
+			}
+			vscode.workspace.getConfiguration().update('zSearch.SearchStrings.ListOfPreviousSearchStrings', choices);
+			quickPick.hide()
+		})
+		quickPick.show();
+	}).then(valor => {
+		console.log(valor);
+		return valor;
+	})
+}
+async function getSearchFiters() {
+
+	let choices = vscode.workspace.getConfiguration().get('zSearch.SearchFilters.ListOfPreviousSearchFilters');
+
+	return new Promise((resolve) => {
+		const quickPick = vscode.window.createQuickPick();
+		quickPick.items = choices.map(choice => ({ label: choice }));
+		quickPick.step = 2;
+		quickPick.totalSteps = 2;
+		quickPick.value = "";
+		quickPick.title = 'Select search filters';
+		quickPick.placeholder = 'Search filters';
+		quickPick.canSelectMany = true;
+		quickPick.ignoreFocusOut = true;
+
+
+		quickPick.onDidChangeValue(() => {
+			// INJECT user values into proposed values
+		})
+
+		quickPick.onDidAccept(() => {
+			console.log('onDidAccept ' + quickPick.selectedItems)
+			if (!quickPick.value) {
+				console.log(quickPick.selectedItems);
+				resolve(quickPick.selectedItems)
+				quickPick.hide();
+			} else {
+				if (!choices.includes(quickPick.value)) {
+					let seleccao = [];
+					for (let i = 0; i < quickPick.selectedItems.length; i++) {
+						const indice = quickPick.items.indexOf(quickPick.selectedItems[i])
+						if (indice > -1) {
+							seleccao.push(indice);
+						}
+					}
+					let Lista = [];
+
+					quickPick.items = [quickPick.value, ...choices].map(label => ({ label }))
+
+					choices.unshift(quickPick.value);
+
+					Lista.push(quickPick.items[0]);
+
+					for (let i = 0; i < seleccao.length; i++) {
+						const element = seleccao[i] + 1;
+						Lista.push(quickPick.items[element])
+
+					}
+
+					quickPick.selectedItems = Lista;
+
+					quickPick.value = "";
+				}
+			}
+		})
+		quickPick.onDidHide(() => {
+
+			const NumeroHistorico = vscode.workspace.getConfiguration().get('zSearch.SearchFilters.NumberOfPreviousSearchStrings');
+			let update = [];
+			quickPick.items.forEach(valor => {
+				update.push(valor.label);
+			})
+
+			while (NumeroHistorico < update.length) {
+				update.pop();
+			}
+			vscode.workspace.getConfiguration().update('zSearch.SearchFilters.ListOfPreviousSearchFilters', update);
+
+			let resultados = [];
+			quickPick.selectedItems.forEach(valor => {
+
+				resultados.push(valor.label);
+			})
+			return resultados;
+		})
+
+
+		quickPick.show();
+	})
 }

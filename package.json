@@ -15,7 +15,7 @@
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.3",
+  "version": "1.0.4",
   "engines": {
     "vscode": "^1.92.0"
   },
@@ -31,6 +31,12 @@
         "title": "zSearch - Search on library",
         "icon": "$(preview)",
         "shortTitle": "zSearch - Search"
+      },
+      {
+        "command": "zSearch.Click",
+        "title": "zSearch - Click",
+        "icon": "$(preview)",
+        "shortTitle": "zSearch - Click"
       }
     ],
     "menus": {
@@ -45,28 +51,75 @@
     "configuration": {
       "title": "zSearch",
       "properties": {
-        "zSearch.JobName": {
+        "zSearch.JobCard.Name": {
           "type": "string",
           "description": "Job Name to be used in Job Card",
           "default": "${USER}S",
-          "order": 1,
+          "order": 10,
           "maximum": 8
         },
-        "zSearch.JobCardCLASS": {
+        "zSearch.JobCard.CLASS": {
           "type": "string",
           "description": "Job Card Class to be used",
           "default": "D",
-          "order": 2,
+          "order": 11,
           "minimum": 1,
           "maximum": 1
         },
-        "zSearch.JobCardMSGCLASS": {
+        "zSearch.JobCard.MSGCLASS": {
           "type": "string",
           "description": "Job Card Msgclass to be used",
           "default": "X",
-          "order": 3,
+          "order": 12,
           "minimum": 1,
           "maximum": 1
+        },
+        "zSearch.PanelPosition": {
+          "type": "number",
+          "description": "Select the position where the search results panel will be showned",
+          "default": "Beside",
+          "order": 20,
+          "enum": [-1, -2],
+          "enumDescriptions": ["The accurrently active column", "The column to the side of the active one"],
+          "enumItemLabels": ["Active", "Beside"]
+        },
+        "zSearch.SearchStrings.NumberOfPreviousSearchStrings": {
+          "type": "integer",
+          "description": "Number of previous search string to list on a quick pick for the selected library",
+          "default": 5,
+          "order": 30,
+          "maximum": 20,
+          "minimum": 1
+        },
+        "zSearch.SearchStrings.ListOfPreviousSearchStrings": {
+          "type": "array",
+          "description": "A list of previous search string for the selected library. The list is showned on the Search String quick pick",
+          "order": 31,
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "type": "string"
+          },
+          "additionalProperties": false
+        },
+        "zSearch.SearchFilters.NumberOfPreviousSearchStrings": {
+          "type": "integer",
+          "description": "Number of previous search filters to list on a quick pick for the selected library",
+          "default": 5,
+          "order": 40,
+          "maximum": 20,
+          "minimum": 1
+        },
+        "zSearch.SearchFilters.ListOfPreviousSearchFilters": {
+          "type": "array",
+          "description": "A list of previous search Filters for the selected library. The list is showned on the Search Filters quick pick",
+          "order": 41,
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "type": "string"
+          },
+          "additionalProperties": false
         }
       }
     }
