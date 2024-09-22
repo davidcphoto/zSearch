@@ -41,19 +41,55 @@ Search a mainframe library running a _jcl_ with __ISRSUPC__.
 
 This extension contributes the following settings:
 
-* `zSearch.JobName`: Job Name to be used on Job Card.
+* `zSearch.JobCard.Name`: Job Name to be used on Job Card.
 
   >__Default value:__ _${USER}S_
   >
   >💡 __Info:__ In the job card the variable _${USER}_ will be replaced by the _userid_ associated with the active _zosmf_ profile.
 
-* `zSearch.JobCardCLASS`: Class to be used on Job Card.
+* `zSearch.JobCard.CLASS`: Class to be used on Job Card.
 
   >__Default value:__ D
 
-* `zSearch.JobCardMSGCLASS`: Message Class to be used on Job Card.
+* `zSearch.JobCard.MSGCLASS`: Message Class to be used on Job Card.
 
   >__Default value:__ X
+
+* `zSearch.PanelPosition`: Select the position where the search results panel will be showned
+
+  >__Possible values:__
+  >
+  > Active - The currently active column
+  >
+  > Beside (_Default_) - The column to the side of the active one
+
+* `zSearch.SearchStrings.NumberOfPreviousSearchStrings`: Number of previous search string to list on a quick pick for the selected library
+
+  >__Default value:__ 5
+  >
+  >__Min Value:__ 0
+  >
+  >__Max Value:__ 20
+
+* `zSearch.SearchStrings.ListOfPreviousSearchStrings`: A list of previous search string for the selected library. The list is showed on the Search String quick pick
+
+  >__Min items:__ 0
+  >
+  >__Max items:__ 20
+
+* `zSearch.SearchFilters.NumberOfPreviousSearchStrings`: Number of previous search filters to list on a quick pick for the selected library
+
+  >__Default value:__ 5
+  >
+  >__Min Value:__ 0
+  >
+  >__Max Value:__ 20
+
+* `zSearch.SearchStrings.ListOfPreviousSearchStrings`: A list of previous search Filters for the selected library. The list is showed on the Search Filters quick pick
+
+  >__Min items:__ 0
+  >
+  >__Max items:__ 20
 
 
 ## 4. How to...

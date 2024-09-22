@@ -15,7 +15,7 @@
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.4",
+  "version": "1.0.5",
   "engines": {
     "vscode": "^1.92.0"
   },
@@ -80,7 +80,7 @@
           "default": "Beside",
           "order": 20,
           "enum": [-1, -2],
-          "enumDescriptions": ["The accurrently active column", "The column to the side of the active one"],
+          "enumDescriptions": ["The currently active column", "The column to the side of the active one"],
           "enumItemLabels": ["Active", "Beside"]
         },
         "zSearch.SearchStrings.NumberOfPreviousSearchStrings": {
@@ -93,7 +93,7 @@
         },
         "zSearch.SearchStrings.ListOfPreviousSearchStrings": {
           "type": "array",
-          "description": "A list of previous search string for the selected library. The list is showned on the Search String quick pick",
+          "description": "A list of previous search string for the selected library. The list is showed on the Search String quick pick",
           "order": 31,
           "minItems": 0,
           "maxItems": 20,
@@ -112,7 +112,7 @@
         },
         "zSearch.SearchFilters.ListOfPreviousSearchFilters": {
           "type": "array",
-          "description": "A list of previous search Filters for the selected library. The list is showned on the Search Filters quick pick",
+          "description": "A list of previous search Filters for the selected library. The list is showed on the Search Filters quick pick",
           "order": 41,
           "minItems": 0,
           "maxItems": 20,
