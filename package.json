@@ -15,7 +15,7 @@
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "engines": {
     "vscode": "^1.92.0"
   },
@@ -42,7 +42,7 @@
     "menus": {
       "view/item/context": [
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr)/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr)/",
           "command": "zSearch.Search",
           "group": "900_zSearch01"
         }

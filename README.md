@@ -148,6 +148,10 @@ n/a
 ---
 ## 6. Release Notes
 
+
+### 1.0.6
+- Menu removed from Sequencial datasets.
+
 ### 1.0.4
 - A historic of the search strings and used filters added.
 
