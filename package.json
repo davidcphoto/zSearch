@@ -10,7 +10,8 @@
     "zos",
     "zowe",
     "zosmf",
-    "search"
+    "search",
+    "zsearch"
   ],
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
@@ -22,7 +23,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
