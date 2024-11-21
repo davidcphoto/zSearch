@@ -151,6 +151,7 @@ n/a
 
 ### 1.0.6
 - Added the ability to search a string on the results.
+- Corrected error on the open file at line functionality
 
 ### 1.0.6
 - Improved performance.

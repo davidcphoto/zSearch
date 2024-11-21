@@ -695,7 +695,7 @@ function AbreFx(mensagem) {
 				const mensagem = `AbreFx('{"Elemento":"`
 					+ resultado.Resultados[i].Name
 					+ `","Linha":"`
-					+ resultado.Resultados[i].List[j].line
+					+ resultado.Resultados[i].List[j].line.toString()
 					+ `","Biblioteca":"`
 					+ resultado.Biblioteca
 					+ `"}')`;
@@ -703,7 +703,7 @@ function AbreFx(mensagem) {
 				Lista += LinhaIni
 					+ mensagem
 					+ LinhaIni3
-					+ resultado.Resultados[i].List[j].line
+					+ resultado.Resultados[i].List[j].line.toString()
 					+ LinhaMid
 					+ textoSpan
 					+ LinhaFim
@@ -742,7 +742,7 @@ function AbreFx(mensagem) {
 function abreElemento(mensagem) {
 
 	const mensageJson = JSON.parse(mensagem);
-	console.log('Elemento a abrir: ' + mensageJson.Elemento + 'na linha ' + mensageJson.Linha);
+	console.log('Elemento a abrir: ' + mensageJson.Elemento + ' na linha ' + mensageJson.Linha);
 
 	(async () => {
 
@@ -771,7 +771,8 @@ function abreElemento(mensagem) {
 function obtPastaTemporaria(sessão = '', ficheiro = '') {
 	// zowe.files.temporaryDownloadsFolder.path
 
-	const pastaTemp = vscode.workspace.getConfiguration().get('zowe.files.temporaryDownloadsFolder.path');
+	// const pastaTemp = vscode.workspace.getConfiguration().get('zowe.files.temporaryDownloadsFolder.path');
+	const pastaTemp = vscode.workspace.workspaceFolders[0].uri.fsPath;
 	const ficheiroTemp = pastaTemp + '/zSearch/' + sessão + '/' + ficheiro;
 	console.log(ficheiroTemp);
 	return ficheiroTemp;
