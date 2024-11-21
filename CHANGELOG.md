@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.7]
+
+- Added the ability to search a string on the results.
+
 ## [1.0.6]
 
 - Load the extension when vscode starts improving the performance.

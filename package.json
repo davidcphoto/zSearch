@@ -11,12 +11,14 @@
     "zowe",
     "zosmf",
     "search",
-    "zsearch"
+    "zsearch",
+    "david",
+    "canto"
   ],
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.6",
+  "version": "1.0.7",
   "engines": {
     "vscode": "^1.92.0"
   },

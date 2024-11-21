@@ -367,11 +367,11 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 	let painel;
 	const posiçãoPainel = vscode.workspace.getConfiguration().get('zSearch.PanelPosition');
 
-	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', posiçãoPainel)
-	painel.webview.options = {
+	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', posiçãoPainel, {
 		enableScripts: true,
-
-	};
+        enableFindWidget: true,
+        retainContextWhenHidden: true
+	});
 
 	const json = Hilite(resultado.json, resultado.Pesquisa);
 	const outDD = Hilite(resultado.outDD.toString(), resultado.Pesquisa);
