@@ -449,11 +449,6 @@ function geraWebView(resultado = new ResultadoPesquisa) {
             z-index: 1;
 		}
 
-		// .visivel .table {
-		//     transition: all .3s ease;
-        //     scale=1;
-		// 	opacity=1;
-		// }
         .vista{
             display: none;
             z-index: 1;
@@ -489,6 +484,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
         .botoes {
 		    z-index: 10;
             text-align: right;
+			position: relative;
         }
 
 		a {
@@ -512,7 +508,12 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 		    color: var(--vscode-button-secondaryForeground);
             box-shadow: none;
 		}
-l
+
+		.botoesExpandir {
+			position: absolute;
+			z-index: 11;
+		}
+
  		.Lista{
 		    display: none;
 		    position: relative;
@@ -586,9 +587,13 @@ l
 		<h1>Mainframe Search Results</h1>
         <h3 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h3>
 		</div>
+		<div id="ListaExpandir" class="botoesExpandir">
+        	<button id="btExpandir" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: inline">Expand All</button>
+        	<button id="btColapsar" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: none">Collapse All</button>
+       </div>
 	    <div class="botoes">
-           <button id="btLista" type="check" name="vista" onclick="Escolher(this.id)">List</vscode>
-           <button id="btOutDD" class="disponivel" type="check" name="vista" onclick="Escolher(this.id)">OutDD</vscode>
+           <button id="btLista" type="check" name="vista" onclick="Escolher(this.id)">List</button>
+           <button id="btOutDD" class="disponivel" type="check" name="vista" onclick="Escolher(this.id)">OutDD</button>
            <button id="btJson" class="disponivel"type="check" name="vista" onclick="Escolher(this.id)">Json</button>
        </div>
     </div>
@@ -610,6 +615,7 @@ l
 
 			switch(escolha) {
 			    case "btLista":
+			    	document.getElementById("ListaExpandir").style.visibility = "visible";
 			    	document.getElementById("btLista").classList.remove("disponivel");
 					document.getElementById("btOutDD").classList.add("disponivel");
 					document.getElementById("btJson").classList.add("disponivel");
@@ -618,6 +624,7 @@ l
 					document.getElementById("Json").classList.remove("visivel");
 					break;
 			    case "btOutDD":
+			    	document.getElementById("ListaExpandir").style.visibility = "hidden";
 			    	document.getElementById("btLista").classList.add("disponivel");
 					document.getElementById("btOutDD").classList.remove("disponivel");
 					document.getElementById("btJson").classList.add("disponivel");
@@ -626,6 +633,7 @@ l
 					document.getElementById("Json").classList.remove("visivel");
 					break;
 			    case "btJson":
+			    	document.getElementById("ListaExpandir").style.visibility = "hidden";
 			    	document.getElementById("btLista").classList.add("disponivel");
 					document.getElementById("btOutDD").classList.add("disponivel");
 					document.getElementById("btJson").classList.remove("disponivel");
@@ -636,13 +644,50 @@ l
 			}
         }
 
+		function expandir(id) {
+
+		    var lista = document.getElementsByClassName("elemento");
+			if (id == "btExpandir") {
+
+				for (let i = 0; i < lista.length; i++) {
+					lista[i].classList.add("visivel");
+				}
+
+				document.getElementById("btExpandir").style.display = "none";
+				document.getElementById("btColapsar").style.display = "inline";
+
+			} else {
+
+				for (let i = 0; i < lista.length; i++) {
+					lista[i].classList.remove("visivel");
+				}
+
+				document.getElementById("btExpandir").style.display = "inline";
+				document.getElementById("btColapsar").style.display = "none";
+
+			 }
+
+		}
+
 		function mostraelemento(id) {
 
 		    console.log(id);
 			if (document.getElementById(id).classList.contains("visivel")) {
-    			document.getElementById(id).classList.remove("visivel");
+
+				document.getElementById(id).classList.remove("visivel");
+				document.getElementById("btExpandir").style.display = "inline";
+
+				if (document.getElementsByClassName("elemento visivel").length==0) {
+					document.getElementById("btColapsar").style.display = "none";
+				}
+
 			} else {
 				document.getElementById(id).classList.add("visivel");
+				document.getElementById("btColapsar").style.display = "inline";
+
+				if (document.getElementsByClassName("elemento visivel").length == document.getElementsByClassName("elemento").length) {
+					document.getElementById("btExpandir").style.display = "none";
+				}
 			}
 
 		}

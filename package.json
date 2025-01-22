@@ -13,12 +13,13 @@
     "search",
     "zsearch",
     "david",
-    "canto"
+    "canto",
+    "3.14"
   ],
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.7",
+  "version": "1.0.8",
   "engines": {
     "vscode": "^1.92.0"
   },

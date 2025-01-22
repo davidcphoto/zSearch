@@ -149,6 +149,9 @@ n/a
 
 ## 6. Release Notes
 
+### 1.0.7
+- Added Expand and Collapse buttons.
+
 ### 1.0.6
 - Added the ability to search a string on the results.
 - Corrected error on the open file at line functionality
