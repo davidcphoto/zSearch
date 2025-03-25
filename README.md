@@ -149,6 +149,9 @@ n/a
 
 ## 6. Release Notes
 
+### 1.0.9
+- Added the number os results to the "Expand All" and "Collapse All" buttons.
+
 ### 1.0.7
 - Added Expand and Collapse buttons.
 

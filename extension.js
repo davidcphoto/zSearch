@@ -375,6 +375,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 	const json = Hilite(resultado.json, resultado.Pesquisa);
 	const outDD = Hilite(resultado.outDD.toString(), resultado.Pesquisa);
+	const total = resultado.Resultados.length;
 
 	const HTMLInicio = `<!DOCTYPE html>
 <html>
@@ -588,8 +589,8 @@ function geraWebView(resultado = new ResultadoPesquisa) {
         <h3 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h3>
 		</div>
 		<div id="ListaExpandir" class="botoesExpandir">
-        	<button id="btExpandir" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: inline">Expand All</button>
-        	<button id="btColapsar" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: none">Collapse All</button>
+        	<button id="btExpandir" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: inline">Expand All (${total})</button>
+        	<button id="btColapsar" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: none">Collapse All (${total})</button>
        </div>
 	    <div class="botoes">
            <button id="btLista" type="check" name="vista" onclick="Escolher(this.id)">List</button>

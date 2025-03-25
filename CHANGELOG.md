@@ -1,8 +1,8 @@
 # Change Log
 
-## [1.0.7]
+## [1.0.9]
 
-- Added the ability to search a string on the results.
+- Added the number os results to the "Expand All" and "Collapse All" buttons.
 
 ## [1.0.6]
 

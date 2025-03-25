@@ -19,7 +19,7 @@
   "repository": {
     "url": "https://github.com/davidcphoto/zSearch.git"
   },
-  "version": "1.0.8",
+  "version": "1.0.9",
   "engines": {
     "vscode": "^1.92.0"
   },
