@@ -5,6 +5,7 @@ const zowe_explorer_api = require('@zowe/zowe-explorer-api');
 const ProfileInfo = require("@zowe/imperative");
 const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
 const Download = require("@zowe/zos-files-for-zowe-sdk");
+const { download } = require('@vscode/test-electron');
 
 var SessaoActiva;
 
@@ -79,42 +80,51 @@ function activate(context) {
 	context.subscriptions.push(disposable);
 }
 
-function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren, sessao) {
+function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildre, sessao) {
 
-	if (BibliotecaChildren.length > 0) {
+	// if (BibliotecaChildren.length == 0) {
+
+	obtemFilhos(sessao, Biblioteca).then(BibliotecaChildren => {
+		// };
 
 		getSearchString(seleccao).then(resultado => {
 			getSearchFiters().then(filtros => {
 
 				ValidaFiltro(resultado, Biblioteca, BibliotecaChildren, filtros, sessao);
-			})
+			});
 
-		})
-	}
+		});
+	});
+}
+
+function obtemFilhos(sessao, Biblioteca = '') {
+
+	return Download.List.allMembers(sessao, Biblioteca);
+
 }
 
 function ValidaFiltro(resultado = '', Biblioteca = '', BibliotecaChildren, filtros, sessao) {
 
 	let filtroSelecionado = [];
-	BibliotecaChildren.forEach(registo => {
+	BibliotecaChildren.apiResponse.items.forEach(registo => {
 
 		filtros.forEach(resultado => {
 			const filtro = resultado.label.toUpperCase();
 			switch (true) {
 				case filtro.endsWith('*'):
-					if (registo.label.startsWith(filtro.substring(0, filtro.length - 1))) {
-						filtroSelecionado.push(registo.label);
+					if (registo.member.startsWith(filtro.substring(0, filtro.length - 1))) {
+						filtroSelecionado.push(registo.member);
 					}
 					break;
 				case filtro.startsWith('*'):
-					if (registo.label.endsWith(filtro.substring(1))) {
-						filtroSelecionado.push(registo.label);
+					if (registo.member.endsWith(filtro.substring(1))) {
+						filtroSelecionado.push(registo.member);
 					}
 					break;
 				case !filtro.includes('*'):
 
-					if (registo.label.startsWith(filtro.substring(0, filtro.length))) {
-						filtroSelecionado.push(registo.label);
+					if (registo.member.startsWith(filtro.substring(0, filtro.length))) {
+						filtroSelecionado.push(registo.member);
 					}
 					break;
 			}
@@ -819,7 +829,7 @@ function AbreElemento(doc, mensageJson) {
 
 	if (vscode.workspace.workspaceFolders !== undefined) {
 
-		var caminho = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\"+ mensageJson.Elemento;
+		var caminho = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\" + mensageJson.Elemento;
 
 		var setting = vscode.Uri.parse("untitled:" + caminho);
 
@@ -828,9 +838,9 @@ function AbreElemento(doc, mensageJson) {
 				e.edit(edit => {
 					edit.insert(new vscode.Position(0, 0), doc);
 				});
-				const posição1 = new vscode.Position( Number(mensageJson.Linha) - 1, 0 );
-				const posição2 = new vscode.Position( Number(mensageJson.Linha) - 1, 1 );
-				const range = new vscode.Range(posição1,posição2);
+				const posição1 = new vscode.Position(Number(mensageJson.Linha) - 1, 0);
+				const posição2 = new vscode.Position(Number(mensageJson.Linha) - 1, 1);
+				const range = new vscode.Range(posição1, posição2);
 				e.revealRange(range);
 
 			});

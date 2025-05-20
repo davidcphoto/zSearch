@@ -5,6 +5,7 @@
 
 - Added a *"Searching..."* message to the VS Code toolbar.
 - Stopped saving files to the workspace when a line number is selected to open.
+- Removed the dependency of having the xowe explorer members.
 
 ## [1.0.9]
 
