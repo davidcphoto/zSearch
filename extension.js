@@ -20,9 +20,9 @@ function activate(context) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "zSearch" is now active!');
 
-	// let disposable2 = vscode.commands.registerCommand('zSearch.Click', async function () {
+	// let ExibirJob = vscode.commands.registerCommand('zSearch.ExibirJob', function (JobID) {
 
-	// 	// console.log("selecionado " + await getSearchFiters());
+	// 	vscode.window.showInformationMessage(`Search executing job id([${JobID}](command:zowe.jobs.setJobSpool?%5B%22zosmf%22%2C%22${JobID}%22%5D))`);
 
 	// })
 	// The command has been defined in the package.json file
@@ -74,11 +74,9 @@ function activate(context) {
 	});
 
 
-	StatusBar.command = "zSearch";
-	StatusBar.tooltip = "Searching the mainframe";
+
 	context.subscriptions.push(StatusBar);
 	context.subscriptions.push(disposable);
-	// context.subscriptions.push(disposable2);
 }
 
 function introduzirString(seleccao = '', Biblioteca = '', BibliotecaChildren, sessao) {
@@ -166,6 +164,7 @@ SRCHFOR  '` + ValorPesquisar + `'
 //////////////////////////////////////////////////////////////////
 function trataSessao(ValorPesquisar, Biblioteca, value, sessao) {
 
+
 	(async () => {
 
 		const job = new Job(sessao, ValorPesquisar, Biblioteca, value);
@@ -214,11 +213,18 @@ function ObtemFiltroPesquisar(filtro = []) {
 
 function executaJobZowe(job = new Job) {
 
+	StatusBar.text = `$(loading~spin) Searching...`;
+	StatusBar.tooltip = `Searching for "${job.ValorPesquisar}" at "${job.Biblioteca}"!`;
+	StatusBar.show();
+
 	(async () => {
+
 		SubmitJobs
 			.SubmitJobs
 			.submitJclNotify(job.Session, job.JCL)
 			.then(resultado => {
+
+				// vscode.window.showInformationMessage(`Search job [${resultado.jobname}](command:zowe.jobs.setJobSpool?%5B%22zosmf%22%2C%22${resultado.jobid}%22%5D)!`);
 
 				ObtemRespostaJobZowe(resultado, job);
 
@@ -254,6 +260,8 @@ function ObtemRespostaJobZowe(jobExecutado, job = new Job) {
 	})().catch((err) => {
 		console.error('ObtemRespostaJobZowe - erro: ' + err);
 	});
+
+	StatusBar.hide();
 }
 
 //////////////////////////////////////////////////////////////////
@@ -369,8 +377,8 @@ function geraWebView(resultado = new ResultadoPesquisa) {
 
 	painel = vscode.window.createWebviewPanel('Search Result', 'zSearch', posiçãoPainel, {
 		enableScripts: true,
-        enableFindWidget: true,
-        retainContextWhenHidden: true
+		enableFindWidget: true,
+		retainContextWhenHidden: true
 	});
 
 	const json = Hilite(resultado.json, resultado.Pesquisa);
@@ -586,7 +594,7 @@ function geraWebView(resultado = new ResultadoPesquisa) {
     <div class="cabecalho">
 	    <div>
 		<h1>Mainframe Search Results</h1>
-        <h3 id="cabecalho">Search results for: ` + resultado.Pesquisa + `</h3>
+        <h3 id="cabecalho">Search results for: ${resultado.Pesquisa}</h3>
 		</div>
 		<div id="ListaExpandir" class="botoesExpandir">
         	<button id="btExpandir" class="disponivel" type="check" name="expand" onclick="expandir(this.id)" style="display: inline">Expand All (${total})</button>
@@ -781,8 +789,7 @@ function AbreFx(mensagem) {
 	painel.webview.html = HTML;
 	painel.webview.onDidReceiveMessage(message => {
 		abreElemento(message);
-	})
-	StatusBar.hide();
+	});
 }
 
 function abreElemento(mensagem) {
@@ -794,49 +801,47 @@ function abreElemento(mensagem) {
 
 		const profInfo = new ProfileInfo.ProfileInfo("zowe");
 		await profInfo.readProfilesFromDisk();
-		const zosmfProfAttrs = profInfo.getDefaultProfile("zosmf");
 
 		const dataset = mensageJson.Biblioteca + "(" + mensageJson.Elemento + ")";
-		const datasetPath = obtPastaTemporaria(zosmfProfAttrs.profName, dataset);
-		const options = {
-			"file": datasetPath
-		};
+
 		console.log(dataset);
-		const response = await Download.Download.dataSet(SessaoActiva, dataset, options);
+		Download.Get.dataSet(SessaoActiva, dataset).then(resposta => {
+			AbreElemento(resposta.toString(), mensageJson);
 
-		if (response.success) {
-			AbreFicheiro(datasetPath, Number(mensageJson.Linha));
-		}
+		})
 
-		console.log(response);
 	})().catch((err) => {
 		console.error(err);
 	});
 }
 
-function obtPastaTemporaria(sessão = '', ficheiro = '') {
-	// zowe.files.temporaryDownloadsFolder.path
+function AbreElemento(doc, mensageJson) {
 
-	// const pastaTemp = vscode.workspace.getConfiguration().get('zowe.files.temporaryDownloadsFolder.path');
-	const pastaTemp = vscode.workspace.workspaceFolders[0].uri.fsPath;
-	const ficheiroTemp = pastaTemp + '/zSearch/' + sessão + '/' + ficheiro;
-	console.log(ficheiroTemp);
-	return ficheiroTemp;
+	if (vscode.workspace.workspaceFolders !== undefined) {
 
-}
+		var caminho = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\"+ mensageJson.Elemento;
 
-function AbreFicheiro(filePath = '', linha = 0) {
+		var setting = vscode.Uri.parse("untitled:" + caminho);
 
-	const openPath = vscode.Uri.file(filePath);
-	vscode.workspace.openTextDocument(openPath).then(doc => {
+		vscode.workspace.openTextDocument(setting).then((a) => {
+			vscode.window.showTextDocument(a, 1, false).then(e => {
+				e.edit(edit => {
+					edit.insert(new vscode.Position(0, 0), doc);
+				});
+				const posição1 = new vscode.Position( Number(mensageJson.Linha) - 1, 0 );
+				const posição2 = new vscode.Position( Number(mensageJson.Linha) - 1, 1 );
+				const range = new vscode.Range(posição1,posição2);
+				e.revealRange(range);
 
-		vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {
-			let range = doc.lineAt(linha - 1).range;
-			editor.selection = new vscode.Selection(range.start, range.end);
-			editor.revealRange(range);
+			});
+
+		}, (error) => {
+			console.error(error);
+			debugger;
 
 		});
-	});
+
+	}
 }
 
 function Hilite(Texto = '', subTexto = '') {
@@ -893,7 +898,7 @@ async function getSearchString(valorInicial) {
 				}
 			}
 			vscode.workspace.getConfiguration().update('zSearch.SearchStrings.ListOfPreviousSearchStrings', choices);
-			quickPick.hide()
+			quickPick.hide();
 		})
 		quickPick.show();
 	}).then(valor => {

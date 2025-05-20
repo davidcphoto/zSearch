@@ -1,5 +1,11 @@
 # Change Log
 
+
+## [1.1.0]
+
+- Added a *"Searching..."* message to the VS Code toolbar.
+- Stopped saving files to the workspace when a line number is selected to open.
+
 ## [1.0.9]
 
 - Added the number os results to the "Expand All" and "Collapse All" buttons.
