@@ -149,6 +149,9 @@ n/a
 
 ## 6. Release Notes
 
+### 1.1.1
+- Corrected dependency's.
+
 ### 1.1.0
 - Added a *"Searching..."* message to the VS Code toolbar.
 - Stopped saving files to the workspace when a line number is selected to open.

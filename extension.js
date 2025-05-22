@@ -5,7 +5,6 @@ const zowe_explorer_api = require('@zowe/zowe-explorer-api');
 const ProfileInfo = require("@zowe/imperative");
 const SubmitJobs = require("@zowe/zos-jobs-for-zowe-sdk");
 const Download = require("@zowe/zos-files-for-zowe-sdk");
-const { download } = require('@vscode/test-electron');
 
 var SessaoActiva;
 
